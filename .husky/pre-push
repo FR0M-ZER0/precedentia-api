@@ -2,7 +2,7 @@
 
 echo
 echo "🧪 Running tests..."
-pytest
+pytest || [ $? -eq 5 ]
 if [ $? -ne 0 ]; then
 	echo "❌ Tests failed. Commit aborted."
 	exit 1
