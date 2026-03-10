@@ -13,6 +13,50 @@ O projeto utiliza as seguintes tecnologias e bibliotecas:
 - **Python-dotenv** - Gerenciamento de variáveis de ambiente via arquivo `.env`
 - **Pytest** - Framework de testes para testes unitários e de integração
 
+## 🏗️ Arquitetura
+
+O projeto segue a seguinte estrutura:
+
+    app/
+    ├── api/
+    │   ├── endpoints
+    │   └── router.py
+    ├── core/
+    │   ├── config.py
+    │   └── database.py
+    ├── models/
+    │   └── user_model.py
+    ├── repositories/
+    │   └── user_repository.py
+    ├── schemas/
+    │   └── user_schema.py
+    ├── security/
+    │   └── validation.py
+    ├── services/
+    │   └── user_service.py
+    ├── utils/
+    │   ├── formatter.py
+    │   ├── pagination.py
+    │   └── hateoas.py
+    └── main.py
+
+### Camadas da Arquitetura
+
+**Api** - Contém as rotas e endpoints responsáveis por receber as requisições HTTP e encaminhá-las para as camadas apropriadas da aplicação.
+
+**Core** - Contém configurações globais do projeto, como configuração do banco de dados, variáveis de ambiente, inicialização de serviços e outras definições centrais.
+
+**Models** - Contém os modelos que representam as entidades do banco de dados. Normalmente são utilizados pelo ORM para mapear tabelas e relacionamentos.
+
+**Repositories** - Responsáveis pela comunicação direta com o banco de dados. Implementam as operações de acesso a dados (CRUD), isolando a lógica de persistência do restante da aplicação.
+
+**Schemas** - Definem os modelos de dados utilizados para validação, serialização e desserialização das requisições e respostas da API. São usados para validar entrada de dados e estruturar respostas.
+
+**Security** - Contém funcionalidades relacionadas à segurança da aplicação, como validação de tokens, autenticação, autorização e outras regras de proteção.
+
+**Services** - Contém a lógica de negócio da aplicação. Essa camada coordena regras de negócio e utiliza os repositórios para acessar os dados.
+
+**Utils** - Reúne funções utilitárias e helpers reutilizáveis em diferentes partes do sistema, como formatação de dados, paginação e implementação de padrões como HATEOAS.
 
 ## ⚙️ Rodando o Projeto
 
