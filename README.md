@@ -90,7 +90,23 @@ Copie o arquivo de exemplo e preencha com os valores adequados:
 cp .env.example .env
 ```
 
-### 5️⃣ Execute a aplicação
+### 5️⃣ Instale as dependências do Node
+
+O projeto faz uso do Husky para gerenciar os hooks do git, bem como do commitlint. Instale esses pacotes usando:
+
+```bash
+npm i
+```
+
+Depois rode o seguinte comando para ativar o Husky:
+
+```bash
+npm run prepare
+```
+
+> **Atenção:** É necessário ativar o ambiente virtual do python para poder fazer os commits!
+
+### 6️⃣ Execute a aplicação
 
 ```bash
 fastapi dev app/main.py
