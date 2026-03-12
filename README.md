@@ -62,7 +62,7 @@ O projeto segue a seguinte estrutura:
 
 ### 1️⃣ Verifique o ambiente Python
 
-Execute o comando abaixo para garantir que está utilizando a versão correta do Python (3.11+):
+Execute o comando abaixo para garantir que está utilizando a versão correta do Python (3.12+):
 
 ```bash
 python --version
