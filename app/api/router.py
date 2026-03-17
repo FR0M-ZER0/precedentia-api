@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.api.endpoints.health_check_routes import router as health_router
-from app.api.endpoints import extraction_routes
+from app.api.endpoints import extraction_routes, analysis_routes
 
 
 api_router = APIRouter()
@@ -11,4 +11,7 @@ for router in routers:
     api_router.include_router(router, prefix="/api")
     api_router.include_router(
         extraction_routes.router, prefix="/documents", tags=["extraction"]
+    )
+    api_router.include_router(
+        analysis_routes.router, prefix="/analysis", tags=["analysis"]
     )
