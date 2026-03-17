@@ -2,6 +2,7 @@ import re
 from pypdf import PdfReader
 import io
 
+
 class ExtractionService:
     @staticmethod
     async def extract_text_from_pdf(file_bytes: bytes) -> dict:
@@ -13,10 +14,7 @@ class ExtractionService:
         for page in pages:
             text = page.extract_text()
             if text:
-                clean_text = re.sub(r'\s+', ' ', text)
+                clean_text = re.sub(r"\s+", " ", text)
                 full_text += clean_text + "\n"
 
-        return {
-            "text": full_text.strip(),
-            "count": len(pages)
-        }
+        return {"text": full_text.strip(), "count": len(pages)}
