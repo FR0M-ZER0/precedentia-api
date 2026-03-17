@@ -12,6 +12,7 @@ O projeto utiliza as seguintes tecnologias e bibliotecas:
 - **PyJWT** - Geração e validação de tokens JWT para autenticação
 - **Python-dotenv** - Gerenciamento de variáveis de ambiente via arquivo `.env`
 - **Pytest** - Framework de testes para testes unitários e de integração
+- **Pypdf** - Framework de extração de dados em PDF
 
 ## 🏗️ Arquitetura
 
@@ -39,6 +40,7 @@ O projeto segue a seguinte estrutura:
     │   ├── pagination.py
     │   └── hateoas.py
     └── main.py
+    tests/
 
 ### Camadas da Arquitetura
 
