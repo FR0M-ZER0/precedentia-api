@@ -12,6 +12,7 @@ O projeto utiliza as seguintes tecnologias e bibliotecas:
 - **PyJWT** - Geração e validação de tokens JWT para autenticação
 - **Python-dotenv** - Gerenciamento de variáveis de ambiente via arquivo `.env`
 - **Pytest** - Framework de testes para testes unitários e de integração
+- **Pypdf** - Framework de extração de dados em PDF
 
 ## 🏗️ Arquitetura
 
@@ -39,6 +40,7 @@ O projeto segue a seguinte estrutura:
     │   ├── pagination.py
     │   └── hateoas.py
     └── main.py
+    tests/
 
 ### Camadas da Arquitetura
 
@@ -68,29 +70,7 @@ Execute o comando abaixo para garantir que está utilizando a versão correta do
 python --version
 ```
 
-### 2️⃣ Crie e ative o ambiente virtual
-
-```bash
-python -m venv .venv       # ou python3 no Linux
-source .venv/bin/activate  # Linux/macOS
-.venv\Scripts\activate     # Windows
-```
-
-### 3️⃣ Instale as dependências
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4️⃣ Configure as variáveis de ambiente
-
-Copie o arquivo de exemplo e preencha com os valores adequados:
-
-```bash
-cp .env.example .env
-```
-
-### 5️⃣ Instale as dependências do Node
+### 2️⃣ Instale as dependências do Node
 
 O projeto faz uso do Husky para gerenciar os hooks do git, bem como do commitlint. Instale esses pacotes usando:
 
@@ -105,6 +85,30 @@ npm run prepare
 ```
 
 > **Atenção:** É necessário ativar o ambiente virtual do python para poder fazer os commits!
+
+> **Atenção:** É necessário rodar o npm i antes de criar a venv!
+
+### 3️⃣ Crie e ative o ambiente virtual
+
+```bash
+python -m venv .venv       # ou python3 no Linux
+source .venv/bin/activate  # Linux/macOS
+.venv\Scripts\activate     # Windows
+```
+
+### 4️⃣ Instale as dependências
+
+```bash
+pip install -r requirements.txt
+```
+
+### 5️⃣ Configure as variáveis de ambiente
+
+Copie o arquivo de exemplo e preencha com os valores adequados:
+
+```bash
+cp .env.example .env
+```
 
 ### 6️⃣ Execute a aplicação
 
