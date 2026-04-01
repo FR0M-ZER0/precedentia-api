@@ -11,11 +11,11 @@ async def extract_pdf_data(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Por Favor, envie um arquivo PDF.")
 
     try:
-        content = await file.read()
-        result = await ExtractionService.extract_text_from_pdf(content)
+        text = await file.read()
+        result = await ExtractionService.extract_text_from_pdf(text)
 
         return PDFExtractionResponse(
-            filename=file.filename, content=result["text"], total_pages=result["count"]
+            filename=file.filename, text=result["text"], total_pages=result["count"]
         )
     except Exception as e:
         raise HTTPException(
