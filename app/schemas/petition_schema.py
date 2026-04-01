@@ -75,7 +75,7 @@ class PetitionRequest(BaseModel):
     type: str = Field(..., example="Ação de Alimentos")
     facts: str = Field(..., example="Resumo dos fatos da petição...")
     text: str = Field(..., example="Conteúdo extraído do PDF...")
-    requests: List[str] = Field(default_factory=list)
+    requests: List[str] = Field(..., json_schema_extra={"example": ["danos morais"]})
 
 
 class Precedent(BaseModel):
