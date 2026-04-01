@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import List, Optional
+from fastapi import APIRouter, Depends, Query
 import os
-from app.schemas.petition_schema import PetitionRequest, AnalysisResponse
+from app.schemas.petition_schema import TRIBUNAIS_VALIDOS, PaginatedPrecedentsResponse, PetitionRequest
 from app.services.analysis_service import RealAnalysisService, MockAnalysisService
 from app.services.base_analysis import BaseAnalysisService
 
@@ -13,12 +14,25 @@ def get_analysis_service() -> BaseAnalysisService:
     return MockAnalysisService()
 
 
-@router.post("/send-petition", response_model=AnalysisResponse)
+@router.post("/send-petition", response_model=PaginatedPrecedentsResponse)
 async def analyze_petition(
     petition: PetitionRequest,
-    service: BaseAnalysisService = Depends(get_analysis_service),
+    tribunals: Optional[List[TRIBUNAIS_VALIDOS]] = Query(None, description="Filtrar por um ou mais tribunais"),
+    q: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    score_order: Optional[str] = Query("desc"),
+    date_order: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, le=100),
+    service: BaseAnalysisService = Depends(get_analysis_service)
 ):
-    try:
-        return await service.process_petition(petition)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro no processamento: {str(e)}")
+    return await service.process_petition(
+        data=petition,
+        tribunals=tribunals,
+        q=q,
+        status=status,
+        score_order=score_order,
+        date_order=date_order,
+        page=page,
+        page_size=page_size
+    )
