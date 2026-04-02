@@ -14,10 +14,17 @@ async def extract_pdf_data(file: UploadFile = File(...)):
         text = await file.read()
         result = await ExtractionService.extract_text_from_pdf(text)
 
+        external_response = await ExtractionService.send_petition_to_summary(
+            result["text"]
+        )
+
         return PDFExtractionResponse(
-            filename=file.filename, text=result["text"], total_pages=result["count"]
+            filename=file.filename,
+            petition=external_response,
+            total_pages=result["count"],
         )
     except Exception as e:
+        print(e)
         raise HTTPException(
             status_code=500, detail=f"Erro ao processar o arquivo: {str(e)}"
         )

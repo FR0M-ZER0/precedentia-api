@@ -1,9 +1,26 @@
+import os
 import re
+import httpx
 from pypdf import PdfReader
 import io
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class ExtractionService:
+    @staticmethod
+    async def send_petition_to_summary(text: str):
+        url = f"{os.getenv('SUMMARY_URL')}/api/deconstruct"
+
+        payload = {"peticao": text}
+
+        async with httpx.AsyncClient(timeout=180.0) as client:
+            response = await client.post(url, json=payload)
+
+        response.raise_for_status()
+        return response.json()
+
     @staticmethod
     async def extract_text_from_pdf(file_bytes: bytes) -> dict:
         pdf_file = io.BytesIO(file_bytes)
