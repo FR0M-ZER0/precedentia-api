@@ -14,7 +14,9 @@ class ExtractionService:
         for page in pages:
             text = page.extract_text()
             if text:
-                clean_text = re.sub(r"\s+", " ", text)
-                full_text += clean_text + "\n"
+                if text:
+                    clean_page = text.replace("\n", " ").replace("\r", " ")
+                    clean_page = re.sub(r"\s+", " ", clean_page)
+                    full_text += clean_page + " "
 
         return {"text": full_text.strip(), "count": len(pages)}
