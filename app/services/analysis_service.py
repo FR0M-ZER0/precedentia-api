@@ -9,35 +9,53 @@ from app.services.base_analysis import BaseAnalysisService
 class RealAnalysisService(BaseAnalysisService):
     async def process_petition(
         self,
-        data: PetitionRequest,
-        tribunals: list = None,
-        q: str = None,
-        status: str = None,
-        score_order: str = "desc",
-        date_order: str = None,
-        page: int = 1,
-        page_size: int = 10,
+        data,
+        tribunals=None,
+        q=None,
+        status=None,
+        score_order="desc",
+        date_order=None,
+        page=1,
+        page_size=10,
     ):
-        url = os.getenv("EMBEDDING_URL")
+        url = f"{os.getenv('EMBEDDING_URL')}/api/match"
 
-        params = {
-            "tribunals": tribunals,
-            "q": q,
-            "status": status,
-            "score_order": score_order,
-            "date_order": date_order,
-            "page": page,
-            "page_size": page_size,
+        payload = {
+            "type": data.type,
+            # "tribunal": data.tribunal,
+            "facts": data.facts,
+            "requests": " ".join(data.requests),
         }
 
-        params = {k: v for k, v in params.items() if v is not None}
-
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                url, json=data.model_dump(), params=params, timeout=60.0
-            )
+        async with httpx.AsyncClient(timeout=180.0) as client:
+            response = await client.post(url, json=payload)
             response.raise_for_status()
-            return response.json()
+            raw = response.json()
+
+        results = raw.get("results", [])
+
+        precedents = [
+            {
+                "name": item["name"],
+                "tribunal": item["tribunal"],
+                "last_update": datetime.now(),
+                "situation": item["situation"],
+                "url": item["url"],
+                "description": item["description"],
+                "score": item.get("score") or item.get("similarity_score", 0.0),
+                "rerank_score": item.get("rerank_score"),
+            }
+            for item in results
+        ]
+
+        total = raw.get("total_found", len(precedents))
+
+        return {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "precedents": precedents,
+        }
 
 
 class MockAnalysisService(BaseAnalysisService):

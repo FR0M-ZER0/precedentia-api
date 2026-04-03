@@ -74,7 +74,7 @@ TRIBUNAIS_VALIDOS = Literal[
 class PetitionRequest(BaseModel):
     type: str = Field(..., example="Ação de Alimentos")
     facts: str = Field(..., example="Resumo dos fatos da petição...")
-    text: str = Field(..., example="Conteúdo extraído do PDF...")
+    tribunal: str = Field(..., example="Tribunal ao qual a petição é endereçada...")
     requests: List[str] = Field(..., json_schema_extra={"example": ["danos morais"]})
 
 
