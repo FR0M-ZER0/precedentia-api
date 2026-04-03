@@ -27,7 +27,7 @@ class ExtractionService:
 
         payload = {
             "type": data.get("tipo"),
-            "tribunal": data.get("tribunal", {}).get("nome"),
+            # "tribunal": data.get("tribunal", {}).get("nome"),
             "facts": " ".join(data.get("fatos", [])),
             "requests": " ".join(
                 [p.get("descricao", "") for p in data.get("pedidos", [])]
