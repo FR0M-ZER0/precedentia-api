@@ -1,21 +1,18 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
-import os
 from app.schemas.petition_schema import (
     TRIBUNAIS_VALIDOS,
     PaginatedPrecedentsResponse,
     PetitionRequest,
 )
-from app.services.analysis_service import RealAnalysisService, MockAnalysisService
+from app.services.analysis_service import RealAnalysisService
 from app.services.base_analysis import BaseAnalysisService
 
 router = APIRouter()
 
 
 def get_analysis_service() -> BaseAnalysisService:
-    if os.getenv("EMBEDDING_URL"):
-        return RealAnalysisService()
-    return MockAnalysisService()
+    return RealAnalysisService()
 
 
 @router.post("/send-petition", response_model=PaginatedPrecedentsResponse)
