@@ -29,7 +29,9 @@ class ExtractionService:
             "type": data.get("tipo"),
             "tribunal": data.get("tribunal", {}).get("nome"),
             "facts": " ".join(data.get("fatos", [])),
-            "requests": " ".join([p.get("descricao", "") for p in data.get("pedidos", [])])
+            "requests": " ".join(
+                [p.get("descricao", "") for p in data.get("pedidos", [])]
+            ),
         }
 
         async with httpx.AsyncClient(timeout=180.0) as client:
