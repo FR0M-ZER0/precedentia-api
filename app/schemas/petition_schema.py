@@ -100,10 +100,11 @@ class PrecedentResult(BaseModel):
     name: str
     tribunal: str
     situation: str
+    species: str
+    summary: str
     url: str
     description: str
-    similarity_score: float
-    rerank_score: float
+    score: float
 
 
 class QueryInfo(BaseModel):

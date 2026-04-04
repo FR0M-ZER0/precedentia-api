@@ -33,11 +33,12 @@ class RealAnalysisService(BaseAnalysisService):
                     "id": item["id"],
                     "name": item["name"],
                     "tribunal": item["tribunal"],
+                    "species": item["species"],
+                    "summary": item["summary"],
                     "situation": item["situation"],
                     "url": item["url"],
                     "description": item["description"],
-                    "similarity_score": item.get("similarity_score", 0.0),
-                    "rerank_score": item.get("rerank_score", 0.0),
+                    "score": item.get("score", 0.0),
                 }
                 for item in results
             ],
