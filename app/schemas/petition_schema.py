@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 TRIBUNAIS_VALIDOS = Literal[
     "STF",
@@ -93,3 +93,25 @@ class PaginatedPrecedentsResponse(BaseModel):
     page: int
     page_size: int
     precedents: List[Precedent]
+
+
+class PrecedentResult(BaseModel):
+    id: int
+    name: str
+    tribunal: str
+    situation: str
+    url: str
+    description: str
+    similarity_score: float
+    rerank_score: float
+
+class QueryInfo(BaseModel):
+    type: str
+    facts: str
+    requests: str
+    tribunal: Optional[str] = None
+
+class PetitionResponse(BaseModel):
+    query: QueryInfo
+    results: List[PrecedentResult]
+    total_found: int
