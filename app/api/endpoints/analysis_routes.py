@@ -1,8 +1,5 @@
 from fastapi import APIRouter, Depends
-from app.schemas.petition_schema import (
-    PetitionRequest,
-    PetitionResponse
-)
+from app.schemas.petition_schema import PetitionRequest, PetitionResponse
 from app.services.analysis_service import RealAnalysisService
 from app.services.base_analysis import BaseAnalysisService
 

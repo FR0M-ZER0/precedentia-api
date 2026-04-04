@@ -105,11 +105,13 @@ class PrecedentResult(BaseModel):
     similarity_score: float
     rerank_score: float
 
+
 class QueryInfo(BaseModel):
     type: str
     facts: str
     requests: str
     tribunal: Optional[str] = None
+
 
 class PetitionResponse(BaseModel):
     query: QueryInfo
