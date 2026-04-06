@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 TRIBUNAIS_VALIDOS = Literal[
     "STF",
@@ -74,7 +74,7 @@ TRIBUNAIS_VALIDOS = Literal[
 class PetitionRequest(BaseModel):
     type: str = Field(..., example="Ação de Alimentos")
     facts: str = Field(..., example="Resumo dos fatos da petição...")
-    text: str = Field(..., example="Conteúdo extraído do PDF...")
+    tribunal: str = Field(..., example="Tribunal ao qual a petição é endereçada...")
     requests: List[str] = Field(..., json_schema_extra={"example": ["danos morais"]})
 
 
@@ -93,3 +93,28 @@ class PaginatedPrecedentsResponse(BaseModel):
     page: int
     page_size: int
     precedents: List[Precedent]
+
+
+class PrecedentResult(BaseModel):
+    id: int
+    name: str
+    tribunal: str
+    situation: str
+    species: str
+    summary: str
+    url: str
+    description: str
+    score: float
+
+
+class QueryInfo(BaseModel):
+    type: str
+    facts: str
+    requests: str
+    tribunal: Optional[str] = None
+
+
+class PetitionResponse(BaseModel):
+    query: QueryInfo
+    results: List[PrecedentResult]
+    total_found: int
