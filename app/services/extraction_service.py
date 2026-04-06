@@ -15,10 +15,11 @@ class ExtractionService:
 
         payload = {"peticao": text}
 
-        async with httpx.AsyncClient(timeout=180.0) as client:
+        async with httpx.AsyncClient(timeout=1000.0) as client:
             response = await client.post(url, json=payload)
 
         response.raise_for_status()
+        print(response.json())
         return response.json()
 
     @staticmethod
@@ -32,7 +33,7 @@ class ExtractionService:
             "requests": " ".join(data.get("pedidos", [])),
         }
 
-        async with httpx.AsyncClient(timeout=180.0) as client:
+        async with httpx.AsyncClient(timeout=1000.0) as client:
             response = await client.post(url, json=payload)
 
         response.raise_for_status()
@@ -53,4 +54,5 @@ class ExtractionService:
                     clean_page = re.sub(r"\s+", " ", clean_page)
                     full_text += clean_page + " "
 
+        print(full_text.strip())
         return {"text": full_text.strip(), "count": len(pages)}
