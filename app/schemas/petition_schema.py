@@ -105,6 +105,8 @@ class PrecedentResult(BaseModel):
     url: str
     description: str
     score: float
+    score_species: float
+    last_update: str
 
 
 class QueryInfo(BaseModel):

@@ -21,6 +21,9 @@ class RealAnalysisService(BaseAnalysisService):
 
         results = raw.get("results", [])
 
+        import json
+        print(json.dumps(raw, indent=2, ensure_ascii=False))
+
         return {
             "query": {
                 "type": data.type,
@@ -39,6 +42,8 @@ class RealAnalysisService(BaseAnalysisService):
                     "url": item["url"],
                     "description": item["description"],
                     "score": item.get("score", 0.0),
+                    "last_update": item.get("last_update"),
+                    "score_species": item.get("score_species")
                 }
                 for item in results
             ],
