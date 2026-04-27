@@ -1,9 +1,7 @@
-from email.mime import base
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
 from app.core.database import engine, Base
-from app.models import user_model
 
 Base.metadata.create_all(bind=engine)
 

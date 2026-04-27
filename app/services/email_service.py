@@ -12,12 +12,13 @@ conf = ConnectionConfig(
     MAIL_STARTTLS=True,
     MAIL_SSL_TLS=False,
     USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True
+    VALIDATE_CERTS=True,
 )
+
 
 async def send_2fa_email(recipient_email: str):
     """Gera um código de 6 dígitos e envia para o usuário."""
-    
+
     code = "".join(random.choices(string.digits, k=6))
     print(f"\n🚀 [DEBUG] CÓDIGO DE VERIFICAÇÃO PARA {recipient_email}: {code}\n")
     html = f"""
@@ -38,10 +39,10 @@ async def send_2fa_email(recipient_email: str):
         subject="Seu código de segurança - PrecedentIA",
         recipients=[recipient_email],
         body=html,
-        subtype=MessageType.html
+        subtype=MessageType.html,
     )
 
     fm = FastMail(conf)
     await fm.send_message(message)
-    
+
     return code

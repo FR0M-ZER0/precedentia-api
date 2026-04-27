@@ -17,5 +17,4 @@ for router in routers:
     )
     api_router.include_router(
         auth_routes.router, prefix="/auth", tags=["Authentication"]
-)
-    
+    )
