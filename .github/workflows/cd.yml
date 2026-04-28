@@ -1,0 +1,7 @@
+name: CD to OKE
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - hml
