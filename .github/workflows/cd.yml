@@ -39,3 +39,4 @@ jobs:
           git add precedentia-api/k8s/deployment.yaml
           git commit -m "CD: Update precedentia-api image tag to $SHA_TAG"
           git push
+
