@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: docker.io/gabguimaraes/precedentia-api:ccf87bb
+        image: docker.io/gabguimaraes/precedentia-api:2c3f364
         ports:
         - containerPort: 5000
         resources:
