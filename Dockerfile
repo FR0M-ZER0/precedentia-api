@@ -1,6 +1,15 @@
-FROM --platform=linux/arm64 public.ecr.aws/docker/library/python:3.12-slim
+
+FROM public.ecr.aws/docker/library/python:3.12-slim
+
+
+ARG TARGETPLATFORM
 
 WORKDIR /app
+
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
