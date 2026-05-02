@@ -14,10 +14,14 @@ spec:
     spec:
       containers:
       - name: api
-        image: docker.io/gabguimaraes/precedentia-api:6eb4d70
+        image: docker.io/gabguimaraes/precedentia-api:d61ecef
         ports:
         - containerPort: 5000
         resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
           limits:
-            memory: "4Gi"
+            memory: "2Gi"
             cpu: "1000m"
+
