@@ -35,10 +35,13 @@ class RealAnalysisService(BaseAnalysisService):
                     "tribunal": item["tribunal"],
                     "species": item["species"],
                     "summary": item["summary"],
+                    "question": item["question"],
                     "situation": item["situation"],
+                    "last_update": item["last_update"],
                     "url": item["url"],
                     "description": item["description"],
                     "score": item.get("score", 0.0),
+                    "applicability": item.get("applicability"),
                 }
                 for item in results
             ],
