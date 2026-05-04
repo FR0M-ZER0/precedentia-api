@@ -27,7 +27,7 @@ async def test_send_petition_success(client):
         "facts": "Erro no processamento bancário.",
         "text": "Texto extraído da petição.",
         "requests": ["danos morais", "estorno"],
-        "tribunal": "TJSP"
+        "tribunal": "TJSP",
     }
     params = {"tribunals": ["TJSP"], "page": 1, "page_size": 10}
 
