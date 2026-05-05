@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
+from app.core.database import engine, Base
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="PrecedentIA API", version="1.0.0")
 

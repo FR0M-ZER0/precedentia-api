@@ -2,7 +2,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from app.main import app
 from app.api.endpoints.analysis_routes import get_analysis_service
-from app.services.analysis_service import MockAnalysisService
+from app.services.analysis_service import RealAnalysisService
 
 
 @pytest.fixture
@@ -15,7 +15,7 @@ async def client():
 
 @pytest.fixture(autouse=True)
 def override_analysis_dependency():
-    app.dependency_overrides[get_analysis_service] = lambda: MockAnalysisService()
+    app.dependency_overrides[get_analysis_service] = lambda: RealAnalysisService()
     yield
     app.dependency_overrides = {}
 
@@ -27,6 +27,7 @@ async def test_send_petition_success(client):
         "facts": "Erro no processamento bancário.",
         "text": "Texto extraído da petição.",
         "requests": ["danos morais", "estorno"],
+        "tribunal": "TJSP",
     }
     params = {"tribunals": ["TJSP"], "page": 1, "page_size": 10}
 
