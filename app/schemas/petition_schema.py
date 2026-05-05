@@ -101,9 +101,12 @@ class PrecedentResult(BaseModel):
     tribunal: str
     situation: str
     species: str
-    summary: str
+    summary: Optional[str] = None
+    question: Optional[str] = None
     url: str
     description: str
+    last_update: str
+    applicability: str
     score: float
 
 
