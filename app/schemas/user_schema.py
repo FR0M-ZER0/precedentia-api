@@ -39,3 +39,12 @@ class PasswordResetConfirm(BaseModel):
     email: EmailStr
     code: str
     new_password: str = Field(..., min_length=8)
+
+
+class EmailUpdateRequest(BaseModel):
+    new_email: EmailStr
+
+
+class EmailUpdateConfirm(BaseModel):
+    new_email: EmailStr
+    code: str
