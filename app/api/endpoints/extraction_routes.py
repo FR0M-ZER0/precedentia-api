@@ -26,10 +26,14 @@ async def extract_pdf_data(
         result = await ExtractionService.extract_text_from_pdf(file_bytes)
 
         # 3. Summarise / deconstruct the petition
-        structured_petition = await ExtractionService.send_petition_to_summary(result["text"])
+        structured_petition = await ExtractionService.send_petition_to_summary(
+            result["text"]
+        )
 
         # 4. Find matching precedents
-        precedents_response = await ExtractionService.send_to_embedding(structured_petition)
+        precedents_response = await ExtractionService.send_to_embedding(
+            structured_petition
+        )
 
         # 5. Extract precedent IDs and persist path + precedents
         precedent_ids = ExtractionService.extract_precedent_ids(precedents_response)

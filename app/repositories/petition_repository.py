@@ -9,6 +9,7 @@ from typing import Optional
 
 # ── Data class ───────────────────────────────────────────────────────────────
 
+
 class PetitionRecord:
     """Plain data container — maps 1:1 to the petitions table columns."""
 
@@ -43,7 +44,9 @@ class PetitionRecord:
 
 # ── Local (JSON file) implementation ─────────────────────────────────────────
 
-_LOCAL_STORAGE_PATH = Path(__file__).resolve().parent.parent.parent / "petitions" / "_records.json"
+_LOCAL_STORAGE_PATH = (
+    Path(__file__).resolve().parent.parent.parent / "petitions" / "_records.json"
+)
 
 
 class LocalPetitionRepository:

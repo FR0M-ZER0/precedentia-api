@@ -13,7 +13,6 @@ _PETITIONS_DIR = Path(__file__).resolve().parent.parent.parent / "petitions"
 
 
 class ExtractionService:
-
     @staticmethod
     def save_pdf_locally(file_bytes: bytes, user_id: int) -> str:
         """
