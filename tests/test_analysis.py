@@ -35,7 +35,7 @@ async def test_send_petition_success(client):
 
     assert response.status_code == 200
     data = response.json()
-    assert "total_found" in data 
+    assert "total_found" in data
     assert "results" in data
     assert len(data["results"]) > 0
 

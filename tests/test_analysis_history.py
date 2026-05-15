@@ -77,7 +77,7 @@ async def test_download_pdf_success(auth_client):
 
 async def test_download_pdf_forbidden(auth_client, client):
     db = SessionLocal()
-    random_email = f"hacker_{uuid.uuid4().hex[:6]}@teste.com" 
+    random_email = f"hacker_{uuid.uuid4().hex[:6]}@teste.com"
     outro_user = User(email=random_email, password="...")
     db.add(outro_user)
     db.commit()

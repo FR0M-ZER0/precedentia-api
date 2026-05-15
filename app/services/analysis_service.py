@@ -48,17 +48,18 @@ class RealAnalysisService(BaseAnalysisService):
             "total_found": raw.get("total_found", len(results)),
         }
 
+
 class MockAnalysisService:
     async def process_petition(self, data):
-        reqs = getattr(data, 'requests', [])
+        reqs = getattr(data, "requests", [])
         reqs_str = " ".join(reqs) if isinstance(reqs, list) else str(reqs)
 
         return {
             "query": {
-                "type": getattr(data, 'type', "Indenizatória"),
-                "facts": getattr(data, 'facts', "Fatos simulados"),
+                "type": getattr(data, "type", "Indenizatória"),
+                "facts": getattr(data, "facts", "Fatos simulados"),
                 "requests": reqs_str,
-                "tribunal": getattr(data, 'tribunal', "TJSP")
+                "tribunal": getattr(data, "tribunal", "TJSP"),
             },
             "total_found": 1,
             "results": [
@@ -74,7 +75,7 @@ class MockAnalysisService:
                     "description": "Este é um resultado simulado completo para o teste.",
                     "last_update": "2024-01-01",
                     "applicability": "Alta",
-                    "score": 0.95
+                    "score": 0.95,
                 }
-            ]
+            ],
         }

@@ -28,6 +28,7 @@ async def test_extraction_service_logic():
     result = await ExtractionService.extract_text_from_pdf(pdf_content)
     assert result is not None
 
+
 @pytest.mark.asyncio
 async def test_extract_pdf_endpoint_wrong_format(client):
     files = {"file": ("documento.txt", b"Ola mundo", "text/plain")}
