@@ -23,23 +23,6 @@ class ExtractionService:
         return response.json()
 
     @staticmethod
-    async def send_to_embedding(data: dict):
-        url = f"{os.getenv('EMBEDDING_URL')}/api/match"
-
-        payload = {
-            "type": data.get("tipo"),
-            "tribunal": data.get("tribunal"),
-            "facts": data.get("fatos"),
-            "requests": " ".join(data.get("pedidos", [])),
-        }
-
-        async with httpx.AsyncClient(timeout=1000.0) as client:
-            response = await client.post(url, json=payload)
-
-        response.raise_for_status()
-        return response.json()
-
-    @staticmethod
     async def extract_text_from_pdf(file_bytes: bytes) -> dict:
         pdf_file = io.BytesIO(file_bytes)
         reader = PdfReader(pdf_file)

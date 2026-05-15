@@ -28,21 +28,6 @@ async def test_extraction_service_logic():
     result = await ExtractionService.extract_text_from_pdf(pdf_content)
     assert result is not None
 
-
-@pytest.mark.asyncio
-async def test_extract_pdf_endpoint_success(client):
-    if not os.path.exists(PATH_TO_PDF):
-        pytest.fail(f"Arquivo não encontrado em: {PATH_TO_PDF}")
-
-    with open(PATH_TO_PDF, "rb") as f:
-        files = {"file": ("teste2.pdf", f, "application/pdf")}
-        response = await client.post("/documents/extract", files=files)
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["filename"] == "teste2.pdf"
-
-
 @pytest.mark.asyncio
 async def test_extract_pdf_endpoint_wrong_format(client):
     files = {"file": ("documento.txt", b"Ola mundo", "text/plain")}

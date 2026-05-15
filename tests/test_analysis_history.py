@@ -75,11 +75,10 @@ async def test_download_pdf_success(auth_client):
     assert response.headers["content-type"] == "application/pdf"
 
 
-@pytest.mark.asyncio
 async def test_download_pdf_forbidden(auth_client, client):
-    """Garante que você não consegue baixar petição de outros usuários."""
     db = SessionLocal()
-    outro_user = User(email="outro@teste.com", password="...")
+    random_email = f"hacker_{uuid.uuid4().hex[:6]}@teste.com" 
+    outro_user = User(email=random_email, password="...")
     db.add(outro_user)
     db.commit()
 

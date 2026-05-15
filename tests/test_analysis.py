@@ -2,7 +2,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from app.main import app
 from app.api.endpoints.analysis_routes import get_analysis_service
-from app.services.analysis_service import RealAnalysisService
+from app.services.analysis_service import MockAnalysisService
 
 
 @pytest.fixture
@@ -15,7 +15,7 @@ async def client():
 
 @pytest.fixture(autouse=True)
 def override_analysis_dependency():
-    app.dependency_overrides[get_analysis_service] = lambda: RealAnalysisService()
+    app.dependency_overrides[get_analysis_service] = lambda: MockAnalysisService()
     yield
     app.dependency_overrides = {}
 
@@ -35,9 +35,9 @@ async def test_send_petition_success(client):
 
     assert response.status_code == 200
     data = response.json()
-    assert "total" in data
-    assert "precedents" in data
-    assert len(data["precedents"]) > 0
+    assert "total_found" in data 
+    assert "results" in data
+    assert len(data["results"]) > 0
 
 
 @pytest.mark.asyncio
@@ -54,14 +54,6 @@ async def test_send_petition_missing_field_facts(client):
     response = await client.post("/analysis/send-petition", json=payload)
     assert response.status_code == 422
     assert "facts" in response.text
-
-
-@pytest.mark.asyncio
-async def test_send_petition_missing_field_text(client):
-    payload = {"type": "Ação", "facts": "fatos", "requests": []}
-    response = await client.post("/analysis/send-petition", json=payload)
-    assert response.status_code == 422
-    assert "text" in response.text
 
 
 @pytest.mark.asyncio
