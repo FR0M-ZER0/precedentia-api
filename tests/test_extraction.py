@@ -52,6 +52,7 @@ MOCK_EMBEDDING_RESPONSE = {
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
+
 @pytest_asyncio.fixture
 async def client():
     async with AsyncClient(
@@ -61,6 +62,7 @@ async def client():
 
 
 # ── Unit test: PDF text extraction (no external calls) ───────────────────────
+
 
 @pytest.mark.asyncio
 async def test_extraction_service_logic():
@@ -82,6 +84,7 @@ async def test_extraction_service_logic():
 
 
 # ── Integration test: full endpoint (external services mocked) ────────────────
+
 
 @pytest.mark.asyncio
 async def test_extract_pdf_endpoint_success(client):
@@ -122,6 +125,7 @@ async def test_extract_pdf_endpoint_success(client):
 
 
 # ── Integration test: wrong file format ───────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_extract_pdf_endpoint_wrong_format(client):

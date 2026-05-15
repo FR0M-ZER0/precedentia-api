@@ -11,18 +11,15 @@ from typing import Optional
 
 
 class PetitionRecord:
-    """Plain data container — maps 1:1 to the petitions table columns."""
-
     def __init__(
         self,
         user_id: int,
-        petition_path: str,
         precedents: list[str],
+        petition_path: Optional[str] = None,
     ):
         self.user_id = user_id
         self.petition_path = petition_path
-        self.precedents = precedents  # e.g. ["precedent:123", "precedent:456"]
-        # Fields filled by other means — kept as None until then
+        self.precedents = precedents
         self.type: Optional[str] = None
         self.tribunal: Optional[str] = None
         self.facts: Optional[str] = None

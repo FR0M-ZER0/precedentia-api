@@ -1,5 +1,3 @@
-# app/api/endpoints/extraction_routes.py
-
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from app.services.extraction_service import ExtractionService
 from app.schemas.match_schema import MatchResponse
@@ -40,8 +38,8 @@ async def extract_pdf_data(
 
         record = PetitionRecord(
             user_id=user_id,
-            petition_path=petition_path,
             precedents=precedent_ids,
+            petition_path=petition_path,
         )
         petition_repository.save(record)
 
