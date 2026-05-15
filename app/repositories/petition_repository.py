@@ -41,9 +41,7 @@ class PetitionRecord:
 
 # ── Local (JSON file) implementation ─────────────────────────────────────────
 
-_LOCAL_STORAGE_PATH = (
-    Path(__file__).resolve().parent / "_records.json"
-)
+_LOCAL_STORAGE_PATH = Path(__file__).resolve().parent / "_records.json"
 
 
 class LocalPetitionRepository:
