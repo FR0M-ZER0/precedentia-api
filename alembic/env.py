@@ -7,9 +7,9 @@ from alembic import context
 
 from app.core.database import Base
 
-from app.models.user_model import User
-from app.models.search_model import Search
-from app.models.petition_model import Petition
+from app.models.user_model import User # noqa: F401
+from app.models.search_model import Search # noqa: F401
+from app.models.petition_model import Petition # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
