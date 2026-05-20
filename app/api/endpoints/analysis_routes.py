@@ -4,7 +4,7 @@ import os
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.api.endpoints.auth_routes import get_current_user
-from app.models.petition_model import Petition
+from app.models.search_model import Search as Petition
 from app.schemas.petition_schema import PetitionRequest, PetitionResponse
 from app.services.analysis_service import RealAnalysisService
 from app.services.base_analysis import BaseAnalysisService
@@ -25,7 +25,7 @@ async def analyze_petition(
     petition: PetitionRequest,
     service: BaseAnalysisService = Depends(get_analysis_service),
 ):
-      try:
+    try:
         # 1. Busca os precedentes no serviço de embedding
         response = await service.process_petition(data=petition)
 
