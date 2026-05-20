@@ -3,6 +3,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from app.main import app
 from app.api.endpoints.analysis_routes import get_analysis_service
+from app.services.analysis_service import MockAnalysisService
 from app.services.base_analysis import BaseAnalysisService
 
 
