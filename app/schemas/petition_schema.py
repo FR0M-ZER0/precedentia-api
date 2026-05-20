@@ -72,6 +72,7 @@ TRIBUNAIS_VALIDOS = Literal[
 
 
 class PetitionRequest(BaseModel):
+    user_id: int = Field(..., example=1)
     type: str = Field(..., example="Ação de Alimentos")
     facts: str = Field(..., example="Resumo dos fatos da petição...")
     tribunal: str = Field(..., example="Tribunal ao qual a petição é endereçada...")
