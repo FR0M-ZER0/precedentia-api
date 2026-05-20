@@ -5,7 +5,7 @@ from httpx import ASGITransport, AsyncClient
 from app.main import app
 from app.core.database import SessionLocal
 from app.models.user_model import User
-from app.models.petition_model import Petition
+from app.models.search_model import Search
 from datetime import datetime, timedelta
 
 TEST_EMAIL = f"juridico_{uuid.uuid4().hex[:6]}@fatec.sp.gov.br"
@@ -56,7 +56,7 @@ async def auth_client(client):
 async def test_download_pdf_success(auth_client):
     """Testa o download bem-sucedido de uma petição criada no banco pelo teste."""
     db = SessionLocal()
-    mock_petition = Petition(
+    mock_petition = Search(
         type="Ação de Teste",
         tribunal="TJSP",
         facts="Fatos de teste",
@@ -82,7 +82,7 @@ async def test_download_pdf_forbidden(auth_client, client):
     db.add(outro_user)
     db.commit()
 
-    pet_proibida = Petition(
+    pet_proibida = Search(
         type="Privado",
         tribunal="STF",
         facts="...",
