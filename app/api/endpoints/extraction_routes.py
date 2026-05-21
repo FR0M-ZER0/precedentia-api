@@ -12,7 +12,7 @@ router = APIRouter()
 async def extract_pdf_data(
     file: UploadFile = File(...),
     user_id: int = Form(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Por Favor, envie um arquivo PDF.")
