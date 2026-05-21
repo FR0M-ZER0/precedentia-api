@@ -4,7 +4,7 @@ import os
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.api.endpoints.auth_routes import get_current_user
-from app.models.search_model import Search as Petition
+from app.models.search_model import Search
 from app.schemas.petition_schema import PetitionRequest, PetitionResponse
 from app.services.analysis_service import RealAnalysisService
 from app.services.base_analysis import BaseAnalysisService
@@ -65,23 +65,23 @@ async def download_petition_pdf(
     current_user: User = Depends(get_current_user),
 ):
     petition = (
-        db.query(Petition)
-        .filter(Petition.id == petition_id, Petition.user_id == current_user.id)
+        db.query(Search)
+        .filter(Search.id == petition_id, Search.user_id == current_user.id)
         .first()
     )
 
-    if not petition or not petition.file_path:
+    if not petition or not petition.petition_path:
         raise HTTPException(
             status_code=404, detail="Ficheiro não encontrado ou acesso negado."
         )
 
-    if not os.path.exists(petition.file_path):
+    if not os.path.exists(petition.petition_path):
         raise HTTPException(
             status_code=404, detail="O ficheiro físico não foi encontrado no servidor."
         )
 
     return FileResponse(
-        path=petition.file_path,
+        path=petition.petition_path,
         media_type="application/pdf",
         filename=f"peticao_{petition_id}.pdf",
     )
