@@ -10,7 +10,7 @@ from app.services.analysis_service import RealAnalysisService
 from app.services.base_analysis import BaseAnalysisService
 from app.core.database import get_db
 from app.models.user_model import User
-from app.repositories.petition_repository import PetitionRecord, petition_repository
+from app.repositories.search_repository import SearchRecord, search_repository
 
 
 router = APIRouter()
@@ -24,6 +24,7 @@ def get_analysis_service() -> BaseAnalysisService:
 async def analyze_petition(
     petition: PetitionRequest,
     service: BaseAnalysisService = Depends(get_analysis_service),
+    db: Session = Depends(get_db)
 ):
     try:
         # 1. Busca os precedentes no serviço de embedding
@@ -37,7 +38,7 @@ async def analyze_petition(
         ]
 
         # 3. Persiste os dados da petição + precedentes encontrados
-        record = PetitionRecord(
+        record = SearchRecord(
             user_id=petition.user_id,
             precedents=precedent_ids,
         )
@@ -46,7 +47,7 @@ async def analyze_petition(
         record.facts = petition.facts
         record.requests = " ".join(petition.requests)
 
-        petition_repository.save(record)
+        search_repository.save(record, db)
 
         return response
 
