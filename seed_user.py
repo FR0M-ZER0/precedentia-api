@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
 from app.models.user_model import User
-from app.models.search_model import Search # noqa: F401
-from app.models.petition_model import Petition # noqa: F401
+from app.models.search_model import Search  # noqa: F401
+from app.models.petition_model import Petition  # noqa: F401
 
 
 def seed():
@@ -29,11 +29,7 @@ def seed():
         print("🌱 Iniciando o seed da tabela 'users'...")
 
         for data in mock_users:
-            existing_user = (
-                db.query(User)
-                .filter(User.email == data["email"])
-                .first()
-            )
+            existing_user = db.query(User).filter(User.email == data["email"]).first()
 
             if not existing_user:
                 new_user = User(
