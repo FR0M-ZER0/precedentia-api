@@ -7,3 +7,4 @@ pytest_cache/
 .venv
 app/documents/
 docker-compose.yml
+petitions/
