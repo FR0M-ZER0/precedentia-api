@@ -39,6 +39,12 @@ async def extract_pdf_data(
             precedents=precedent_ids,
             petition_path=petition_path,
         )
+
+        record.type = structured_petition.get("tipo")
+        record.tribunal = structured_petition.get("tribunal")
+        record.facts = structured_petition.get("fatos")
+        record.requests = " ".join(structured_petition.get("pedidos", []))
+
         search_repository.save(record, db)
 
         return precedents_response
