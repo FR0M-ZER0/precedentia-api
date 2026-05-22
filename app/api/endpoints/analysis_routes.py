@@ -25,7 +25,7 @@ async def analyze_petition(
     petition: PetitionRequest,
     service: BaseAnalysisService = Depends(get_analysis_service),
 ):
-      try:
+    try:
         # 1. Busca os precedentes no serviço de embedding
         response = await service.process_petition(data=petition)
 
