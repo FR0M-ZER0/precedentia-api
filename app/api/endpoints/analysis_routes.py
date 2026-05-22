@@ -11,6 +11,7 @@ from app.services.base_analysis import BaseAnalysisService
 from app.core.database import get_db
 from app.models.user_model import User
 from app.repositories.search_repository import SearchRecord, search_repository
+from app.schemas.search_schema import SearchResponse
 
 
 router = APIRouter()
@@ -85,3 +86,25 @@ async def download_petition_pdf(
         media_type="application/pdf",
         filename=f"peticao_{petition_id}.pdf",
     )
+
+
+@router.get("/searches", response_model=list[SearchResponse])
+async def get_user_searches(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    searches = db.query(Search).filter(Search.user_id == current_user.id).all()
+    return searches
+
+
+@router.get("/searches/{search_id}", response_model=SearchResponse)
+async def get_search(
+    search_id: int,
+    db: Session = Depends(get_db),
+):
+    search = db.query(Search).filter(Search.id == search_id).first()
+
+    if not search:
+        raise HTTPException(status_code=404, detail="Pesquisa não encontrada.")
+
+    return search
