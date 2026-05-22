@@ -15,6 +15,12 @@ spec:
       containers:
       - name: api
         image: docker.io/gabguimaraes/precedentia-api:latest
+        env:
+          - name: EMBEDDING_URL
+            value: "http://embedding-service:5001"
+          - name: SUMMARY_URL
+            value: "http://summary-service:5002"
+            
         ports:
         - containerPort: 5000
         resources:
@@ -24,4 +30,3 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
-
