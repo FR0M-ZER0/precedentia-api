@@ -4,13 +4,14 @@ import os
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.api.endpoints.auth_routes import get_current_user
-from app.models.petition_model import Petition
+from app.models.search_model import Search
 from app.schemas.petition_schema import PetitionRequest, PetitionResponse
 from app.services.analysis_service import RealAnalysisService
 from app.services.base_analysis import BaseAnalysisService
 from app.core.database import get_db
 from app.models.user_model import User
-from app.repositories.petition_repository import PetitionRecord, petition_repository
+from app.repositories.search_repository import SearchRecord, search_repository
+from app.schemas.search_schema import SearchResponse
 
 
 router = APIRouter()
@@ -24,29 +25,26 @@ def get_analysis_service() -> BaseAnalysisService:
 async def analyze_petition(
     petition: PetitionRequest,
     service: BaseAnalysisService = Depends(get_analysis_service),
+    db: Session = Depends(get_db),
 ):
-      try:
+    try:
         # 1. Busca os precedentes no serviço de embedding
         response = await service.process_petition(data=petition)
 
         # 2. Extrai os IDs dos precedentes retornados
-        precedent_ids = [
-            str(result["id"])
-            for result in response.get("results", [])
-            if result.get("id") is not None
-        ]
+        precedents_snapshots = response.get("results", [])
 
         # 3. Persiste os dados da petição + precedentes encontrados
-        record = PetitionRecord(
+        record = SearchRecord(
             user_id=petition.user_id,
-            precedents=precedent_ids,
+            precedents=precedents_snapshots,
         )
         record.type = petition.type
         record.tribunal = petition.tribunal
         record.facts = petition.facts
         record.requests = " ".join(petition.requests)
 
-        petition_repository.save(record)
+        search_repository.save(record, db)
 
         return response
 
@@ -64,23 +62,45 @@ async def download_petition_pdf(
     current_user: User = Depends(get_current_user),
 ):
     petition = (
-        db.query(Petition)
-        .filter(Petition.id == petition_id, Petition.user_id == current_user.id)
+        db.query(Search)
+        .filter(Search.id == petition_id, Search.user_id == current_user.id)
         .first()
     )
 
-    if not petition or not petition.file_path:
+    if not petition or not petition.petition_path:
         raise HTTPException(
             status_code=404, detail="Ficheiro não encontrado ou acesso negado."
         )
 
-    if not os.path.exists(petition.file_path):
+    if not os.path.exists(petition.petition_path):
         raise HTTPException(
             status_code=404, detail="O ficheiro físico não foi encontrado no servidor."
         )
 
     return FileResponse(
-        path=petition.file_path,
+        path=petition.petition_path,
         media_type="application/pdf",
         filename=f"peticao_{petition_id}.pdf",
     )
+
+
+@router.get("/searches", response_model=list[SearchResponse])
+async def get_user_searches(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    searches = db.query(Search).filter(Search.user_id == current_user.id).all()
+    return searches
+
+
+@router.get("/searches/{search_id}", response_model=SearchResponse)
+async def get_search(
+    search_id: int,
+    db: Session = Depends(get_db),
+):
+    search = db.query(Search).filter(Search.id == search_id).first()
+
+    if not search:
+        raise HTTPException(status_code=404, detail="Pesquisa não encontrada.")
+
+    return search

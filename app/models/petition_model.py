@@ -1,22 +1,17 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text
+# app/models/petition_model.py
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+from datetime import datetime
 from app.core.database import Base
 
 
 class Petition(Base):
-    __tablename__ = "search"
+    __tablename__ = "petition"
 
     id = Column(Integer, primary_key=True, index=True)
-    type = Column(String, nullable=True)
-    tribunal = Column(String, nullable=True)
-    facts = Column(Text, nullable=True)
-    requests = Column(Text, nullable=True)
-    precedents = Column(Text, nullable=True)
-    petition_path = Column(String, nullable=True)
+    content = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     user_id = Column(Integer, ForeignKey("users.id"))
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), onupdate=func.now(), server_default=func.now()
-    )
-    owner = relationship("User", back_populates="petitions")
+    user = relationship("User", back_populates="petitions")
