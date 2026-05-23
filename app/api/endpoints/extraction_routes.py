@@ -15,9 +15,7 @@ async def extract_pdf_data(
     db: Session = Depends(get_db),
 ):
     if file.content_type != "application/pdf":
-        raise HTTPException(
-            status_code=400, detail="Por Favor, envie um arquivo PDF."
-        )
+        raise HTTPException(status_code=400, detail="Por Favor, envie um arquivo PDF.")
 
     try:
         file_bytes = await file.read()

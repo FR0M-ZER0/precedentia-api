@@ -74,8 +74,7 @@ async def download_petition_pdf(
 
     if not os.path.exists(petition.petition_path):
         raise HTTPException(
-            status_code=404,
-            detail="O ficheiro físico não foi encontrado no servidor."
+            status_code=404, detail="O ficheiro físico não foi encontrado no servidor."
         )
 
     return FileResponse(
