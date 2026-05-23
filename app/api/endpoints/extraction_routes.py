@@ -15,7 +15,9 @@ async def extract_pdf_data(
     db: Session = Depends(get_db),
 ):
     if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Por Favor, envie um arquivo PDF.")
+        raise HTTPException(
+            status_code=400, detail="Por Favor, envie um arquivo PDF."
+        )
 
     try:
         file_bytes = await file.read()
@@ -32,11 +34,13 @@ async def extract_pdf_data(
             structured_petition
         )
 
-        precedent_ids = ExtractionService.extract_precedent_ids(precedents_response)
+        precedents_snapshot = ExtractionService.extract_precedents_snapshot(
+            precedents_response
+        )
 
         record = SearchRecord(
             user_id=user_id,
-            precedents=precedent_ids,
+            precedents=precedents_snapshot,
             petition_path=petition_path,
         )
 

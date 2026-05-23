@@ -31,13 +31,22 @@ class ExtractionService:
         return str(file_path)
 
     @staticmethod
-    def extract_precedent_ids(match_response: dict) -> list[str]:
-        """
-        Extracts precedent IDs from the embedding response.
-        Each result has an 'id' field in the format 'precedent:xyz'.
-        """
+    def extract_precedents_snapshot(match_response: dict) -> list[dict]:
         return [
-            str(result["id"])
+            {
+                "id": result["id"],
+                "name": result["name"],
+                "tribunal": result["tribunal"],
+                "species": result["species"],
+                "summary": result["summary"],
+                "question": result["question"],
+                "situation": result["situation"],
+                "last_update": result["last_update"],
+                "url": result["url"],
+                "description": result["description"],
+                "score": result.get("score", 0.0),
+                "applicability": result.get("applicability"),
+            }
             for result in match_response.get("results", [])
             if result.get("id") is not None
         ]

@@ -32,16 +32,12 @@ async def analyze_petition(
         response = await service.process_petition(data=petition)
 
         # 2. Extrai os IDs dos precedentes retornados
-        precedent_ids = [
-            str(result["id"])
-            for result in response.get("results", [])
-            if result.get("id") is not None
-        ]
+        precedents_snapshots = response.get("results", [])
 
         # 3. Persiste os dados da petição + precedentes encontrados
         record = SearchRecord(
             user_id=petition.user_id,
-            precedents=precedent_ids,
+            precedents=precedents_snapshots,
         )
         record.type = petition.type
         record.tribunal = petition.tribunal
@@ -78,7 +74,8 @@ async def download_petition_pdf(
 
     if not os.path.exists(petition.petition_path):
         raise HTTPException(
-            status_code=404, detail="O ficheiro físico não foi encontrado no servidor."
+            status_code=404,
+            detail="O ficheiro físico não foi encontrado no servidor."
         )
 
     return FileResponse(

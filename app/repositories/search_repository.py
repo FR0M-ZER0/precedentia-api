@@ -1,5 +1,3 @@
-import json
-
 from sqlalchemy.orm import Session
 
 from app.models.search_model import Search
@@ -9,7 +7,7 @@ class SearchRecord:
     def __init__(
         self,
         user_id: int,
-        precedents: list[str],
+        precedents: list[dict],
         petition_path: str | None = None,
     ):
         self.user_id = user_id
@@ -26,7 +24,7 @@ class SearchRepository:
         db_search = Search(
             user_id=record.user_id,
             petition_path=record.petition_path,
-            precedents=json.dumps(record.precedents),
+            precedents=record.precedents,
             type=record.type,
             tribunal=record.tribunal,
             facts=record.facts,
