@@ -23,15 +23,21 @@ async def extract_pdf_data(
     try:
         petition_path = ExtractionService.save_pdf_locally(file_bytes, user_id)
         result = await ExtractionService.extract_text_from_pdf(file_bytes)
-        structured_petition = await ExtractionService.send_petition_to_summary(result["text"])
+        structured_petition = await ExtractionService.send_petition_to_summary(
+            result["text"]
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao processar o arquivo: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao processar o arquivo: {str(e)}"
+        )
 
     async def event_stream():
         precedents_buffer = []
 
         try:
-            async for event_name, payload in ExtractionService.stream_embedding(structured_petition):
+            async for event_name, payload in ExtractionService.stream_embedding(
+                structured_petition
+            ):
                 if event_name == "precedent":
                     precedents_buffer.append(payload)
 
@@ -50,7 +56,9 @@ async def extract_pdf_data(
                         record.type = structured_petition.get("tipo")
                         record.tribunal = structured_petition.get("tribunal")
                         record.facts = structured_petition.get("fatos")
-                        record.requests = " ".join(structured_petition.get("pedidos", []))
+                        record.requests = " ".join(
+                            structured_petition.get("pedidos", [])
+                        )
                         search_repository.save(record, db)
                     except Exception as e:
                         print(f"Erro ao salvar no DB: {e}")
