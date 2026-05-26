@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import httpx
@@ -64,8 +65,8 @@ class ExtractionService:
         return response.json()
 
     @staticmethod
-    async def send_to_embedding(data: dict):
-        url = f"{os.getenv('EMBEDDING_URL')}/api/match"
+    async def stream_embedding(data: dict):
+        url = f"{os.getenv('EMBEDDING_URL')}/api/match/stream"
         payload = {
             "type": data.get("tipo"),
             "tribunal": data.get("tribunal"),
@@ -73,11 +74,31 @@ class ExtractionService:
             "requests": " ".join(data.get("pedidos", [])),
         }
 
-        async with httpx.AsyncClient(timeout=1000.0) as client:
-            response = await client.post(url, json=payload)
+        event_name = "message"
 
-        response.raise_for_status()
-        return response.json()
+        async with httpx.AsyncClient(timeout=1000.0) as client:
+            async with client.stream("POST", url, json=payload) as response:
+                response.raise_for_status()
+
+                async for raw_line in response.aiter_lines():
+                    line = raw_line.strip()
+
+                    if not line or line.startswith(":"):
+                        continue
+
+                    if line.startswith("event:"):
+                        event_name = line.removeprefix("event:").strip()
+                        continue
+
+                    if line.startswith("data:"):
+                        raw_data = line.removeprefix("data:").strip()
+                        try:
+                            payload_data = json.loads(raw_data)
+                        except json.JSONDecodeError:
+                            continue
+
+                        yield event_name, payload_data
+                        event_name = "message"
 
     @staticmethod
     async def extract_text_from_pdf(file_bytes: bytes) -> dict:
