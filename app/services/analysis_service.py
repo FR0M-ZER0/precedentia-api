@@ -1,10 +1,47 @@
 import httpx
+import json
 import os
 
 from app.services.base_analysis import BaseAnalysisService
 
 
 class RealAnalysisService(BaseAnalysisService):
+    async def stream_petition(self, data, **kwargs):
+        url = f"{os.getenv('EMBEDDING_URL')}/api/match/stream"
+
+        payload = {
+            "type": data.type,
+            "tribunal": data.tribunal,
+            "facts": data.facts,
+            "requests": " ".join(data.requests),
+        }
+
+        event_name = "message"
+
+        async with httpx.AsyncClient(timeout=180.0) as client:
+            async with client.stream("POST", url, json=payload) as response:
+                response.raise_for_status()
+
+                async for raw_line in response.aiter_lines():
+                    line = raw_line.strip()
+
+                    if not line or line.startswith(":"):
+                        continue
+
+                    if line.startswith("event:"):
+                        event_name = line.removeprefix("event:").strip()
+                        continue
+
+                    if line.startswith("data:"):
+                        raw_data = line.removeprefix("data:").strip()
+                        try:
+                            payload_data = json.loads(raw_data)
+                        except json.JSONDecodeError:
+                            continue
+
+                        yield event_name, payload_data
+                        event_name = "message"
+
     async def process_petition(self, data, **kwargs):
         url = f"{os.getenv('EMBEDDING_URL')}/api/match"
 

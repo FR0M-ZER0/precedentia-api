@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
-
+from fastapi.responses import FileResponse, StreamingResponse
+import json
 import os
-from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.api.endpoints.auth_routes import get_current_user
 from app.models.search_model import Search
-from app.schemas.petition_schema import PetitionRequest, PetitionResponse
+from app.schemas.petition_schema import PetitionRequest
 from app.services.analysis_service import RealAnalysisService
 from app.services.base_analysis import BaseAnalysisService
 from app.core.database import get_db
@@ -21,38 +21,48 @@ def get_analysis_service() -> BaseAnalysisService:
     return RealAnalysisService()
 
 
-@router.post("/send-petition", response_model=PetitionResponse)
+@router.post("/send-petition")
 async def analyze_petition(
     petition: PetitionRequest,
     service: BaseAnalysisService = Depends(get_analysis_service),
     db: Session = Depends(get_db),
 ):
-    try:
-        # 1. Busca os precedentes no serviço de embedding
-        response = await service.process_petition(data=petition)
+    async def event_stream():
+        precedents_buffer = []
 
-        # 2. Extrai os IDs dos precedentes retornados
-        precedents_snapshots = response.get("results", [])
+        try:
+            async for event_name, payload in service.stream_petition(data=petition):
+                if event_name == "precedent":
+                    precedents_buffer.append(payload)
 
-        # 3. Persiste os dados da petição + precedentes encontrados
-        record = SearchRecord(
-            user_id=petition.user_id,
-            precedents=precedents_snapshots,
-        )
-        record.type = petition.type
-        record.tribunal = petition.tribunal
-        record.facts = petition.facts
-        record.requests = " ".join(petition.requests)
+                yield f"event: {event_name}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
-        search_repository.save(record, db)
+                if event_name == "done":
+                    try:
+                        record = SearchRecord(
+                            user_id=petition.user_id,
+                            precedents=precedents_buffer,
+                        )
+                        record.type = petition.type
+                        record.tribunal = petition.tribunal
+                        record.facts = petition.facts
+                        record.requests = " ".join(petition.requests)
+                        search_repository.save(record, db)
+                    except Exception as e:
+                        print(f"Erro ao salvar no DB: {e}")
 
-        return response
+        except Exception as e:
+            yield f"event: error\ndata: {json.dumps({'message': str(e)})}\n\n"
 
-    except Exception as e:
-        print(e)
-        raise HTTPException(
-            status_code=500, detail=f"Erro ao processar a petição: {str(e)}"
-        )
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "X-Accel-Buffering": "no",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        },
+    )
 
 
 @router.get("/download-pdf/{petition_id}")
