@@ -22,8 +22,7 @@ async def extract_process_data(
     via Server-Sent Events
     """
     if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400,
-                            detail="Por favor, envie um arquivo PDF.")
+        raise HTTPException(status_code=400, detail="Por favor, envie um arquivo PDF.")
 
     file_bytes = await file.read()
 

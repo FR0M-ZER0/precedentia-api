@@ -39,9 +39,7 @@ class SentenceService:
 
     @staticmethod
     def _clean_page_text(raw: str) -> str:
-        return re.sub(
-            r"\s+", " ", raw.replace("\n", " ").replace("\r", " ")
-        ).strip()
+        return re.sub(r"\s+", " ", raw.replace("\n", " ").replace("\r", " ")).strip()
 
     @staticmethod
     def extract_initial_petition(file_bytes: bytes) -> dict:
@@ -146,9 +144,7 @@ class SentenceService:
         """
         result = SentenceService.extract_initial_petition(file_bytes)
 
-        print(
-            f"[SentenceService] Texto extraído:\n{result['text']}\n"
-        )
+        print(f"[SentenceService] Texto extraído:\n{result['text']}\n")
 
         if not result["found"] or not result["text"]:
             raise ValueError(
