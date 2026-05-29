@@ -27,6 +27,20 @@ NEXT_PIECE_MARKERS = [
     r"certid[aã]o\s+de\s+cita[çc][aã]o",
 ]
 
+CONTESTACAO_START_MARKERS = [
+    r"contest[aã][çc][aã]o",
+    r"impugna[çc][aã]o\s+à\s+inicial",
+    r"resposta\s+do\s+r[eé]u",
+]
+
+CONTESTACAO_END_MARKERS = [
+    r"termos\s+em\s+que\s+pede\s+deferimento",
+    r"nestes\s+termos\s*,?\s*requer",
+    r"pede\s+e\s+espera\s+deferimento",
+    r"requer\s+deferimento",
+    r"data\s+e\s+assinatura",
+]
+
 BATCH_SIZE = 50
 MAX_PAGES_TO_SCAN = 300
 SCANNED_PAGE_CHAR_THRESHOLD = 50
@@ -40,9 +54,7 @@ class SentenceService:
 
     @staticmethod
     def _clean_page_text(raw: str) -> str:
-        return re.sub(
-            r"\s+", " ", raw.replace("\n", " ").replace("\r", " ")
-        ).strip()
+        return re.sub(r"\s+", " ", raw.replace("\n", " ").replace("\r", " ")).strip()
 
     @staticmethod
     def _is_new_piece_header(text: str, patterns: list[str]) -> bool:
@@ -51,34 +63,10 @@ class SentenceService:
 
     @staticmethod
     def _is_scanned_page(raw: str) -> bool:
-        """
-        Retorna True se a página parece ser escaneada (imagem sem texto útil).
-        """
         return len(raw.strip()) < SCANNED_PAGE_CHAR_THRESHOLD
 
     @staticmethod
     def extract_initial_petition(file_bytes: bytes) -> dict:
-        """
-        Extrai somente a petição inicial de um processo judicial completo.
-        Lê as páginas em lotes e interrompe assim que detectar o fim da
-        petição, evitando carregar o processo inteiro em memória.
-
-        O fim da petição é detectado por três sinais (em ordem de verificação):
-          1. Marcador textual de encerramento (END_MARKERS)
-          2. Início de nova peça processual (NEXT_PIECE_MARKERS)
-          3. Página escaneada (imagem sem texto) após conteúdo já extraído,
-             padrão comum em processos digitalizados onde cada peça é
-             separada por uma folha de rosto escaneada.
-
-        Returns:
-            {
-                "text": str,
-                "start_page": int,
-                "end_page": int,
-                "pages_read": int,
-                "found": bool,
-            }
-        """
         reader = PdfReader(io.BytesIO(file_bytes))
         total_pages = len(reader.pages)
         limit = min(total_pages, MAX_PAGES_TO_SCAN)
@@ -108,9 +96,9 @@ class SentenceService:
                     if SentenceService._is_scanned_page(raw):
                         end_page = page_idx
                         print(
-                            f"[SentenceService] Página escaneada (sem texto) "
-                            f"detectada na página {page_idx + 1}. Petição "
-                            f"extraída até a página {end_page}."
+                            f"[SentenceService] Página escaneada detectada na "
+                            f"página {page_idx + 1}. Petição extraída até a "
+                            f"página {end_page}."
                         )
                         break
 
@@ -143,8 +131,8 @@ class SentenceService:
         if petition_started and end_page == -1:
             end_page = min(start_page + len(petition_lines), limit)
             print(
-                f"[SentenceService] Fim da petição não detectado por marcador."
-                f" Usando página {end_page} como estimativa."
+                f"[SentenceService] Fim da petição não detectado por marcador. "
+                f"Usando página {end_page} como estimativa."
             )
 
         return {
@@ -156,31 +144,109 @@ class SentenceService:
         }
 
     @staticmethod
-    async def extract_petition_text(file_bytes: bytes) -> dict:
+    def extract_contestacao(file_bytes: bytes, search_from_page: int = 0) -> dict:
         """
-        Wrapper async para uso nos endpoints. Valida se a petição foi
-        encontrada e retorna o texto junto com metadados de localização
-        no processo.
+        Extrai a contestação do processo a partir da página indicada.
+        Busca pelo cabeçalho da contestação e coleta até detectar o fim
+        por marcador de encerramento, nova peça, ou página escaneada.
+
+        Args:
+            file_bytes: bytes do PDF
+            search_from_page: página (0-indexed) a partir da qual buscar,
+                              normalmente o end_page da petição inicial.
 
         Returns:
             {
                 "text": str,
-                "count": int,
-                "meta": {
-                    "start_page": int,
-                    "end_page": int,
-                    "pages_read": int,
-                }
+                "start_page": int,
+                "end_page": int,
+                "found": bool,
             }
         """
+        reader = PdfReader(io.BytesIO(file_bytes))
+        total_pages = len(reader.pages)
+        limit = min(total_pages, MAX_PAGES_TO_SCAN)
+        start_search = max(0, search_from_page)
+
+        contestacao_started = False
+        contestacao_lines: list[str] = []
+        start_page = -1
+        end_page = -1
+
+        for page_idx in range(start_search, limit):
+            raw = reader.pages[page_idx].extract_text() or ""
+            clean = SentenceService._clean_page_text(raw)
+
+            if not contestacao_started:
+                if SentenceService._is_new_piece_header(clean, CONTESTACAO_START_MARKERS):
+                    contestacao_started = True
+                    start_page = page_idx + 1
+                    contestacao_lines.append(clean)
+                    print(
+                        f"[SentenceService] Contestação encontrada na "
+                        f"página {start_page}."
+                    )
+            else:
+                if SentenceService._is_scanned_page(raw):
+                    end_page = page_idx
+                    print(
+                        f"[SentenceService] Página escaneada detectada na "
+                        f"página {page_idx + 1}. Contestação extraída até a "
+                        f"página {end_page}."
+                    )
+                    break
+
+                if SentenceService._matches_any(clean, CONTESTACAO_END_MARKERS):
+                    contestacao_lines.append(clean)
+                    end_page = page_idx + 1
+                    print(
+                        f"[SentenceService] Fim da contestação detectado na "
+                        f"página {end_page}."
+                    )
+                    break
+
+                contestacao_lines.append(clean)
+
+        if contestacao_started and end_page == -1:
+            end_page = min(start_page + len(contestacao_lines), limit)
+            print(
+                f"[SentenceService] Fim da contestação não detectado por marcador. "
+                f"Usando página {end_page} como estimativa."
+            )
+
+        return {
+            "text": " ".join(contestacao_lines).strip(),
+            "start_page": start_page,
+            "end_page": end_page,
+            "found": contestacao_started,
+        }
+
+    @staticmethod
+    async def extract_petition_text(file_bytes: bytes) -> dict:
         result = SentenceService.extract_initial_petition(file_bytes)
 
-        print(f"[SentenceService] Texto extraído:\n{result['text']}\n")
+        print(f"[SentenceService] Texto da petição extraído:\n{result['text']}\n")
 
         if not result["found"] or not result["text"]:
             raise ValueError(
                 f"Petição inicial não encontrada nas primeiras "
                 f"{MAX_PAGES_TO_SCAN} páginas do processo."
+            )
+
+        contestacao = SentenceService.extract_contestacao(
+            file_bytes,
+            search_from_page=result["end_page"],
+        )
+
+        if contestacao["found"]:
+            print(
+                f"[SentenceService] Contestação extraída "
+                f"(págs. {contestacao['start_page']}–{contestacao['end_page']}):"
+                f"\n{contestacao['text']}\n"
+            )
+        else:
+            print(
+                "[SentenceService] Contestação não localizada no processo."
             )
 
         return {
