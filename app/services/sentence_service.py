@@ -29,6 +29,7 @@ NEXT_PIECE_MARKERS = [
 
 BATCH_SIZE = 50
 MAX_PAGES_TO_SCAN = 300
+SCANNED_PAGE_CHAR_THRESHOLD = 50
 
 
 class SentenceService:
@@ -39,7 +40,21 @@ class SentenceService:
 
     @staticmethod
     def _clean_page_text(raw: str) -> str:
-        return re.sub(r"\s+", " ", raw.replace("\n", " ").replace("\r", " ")).strip()
+        return re.sub(
+            r"\s+", " ", raw.replace("\n", " ").replace("\r", " ")
+        ).strip()
+
+    @staticmethod
+    def _is_new_piece_header(text: str, patterns: list[str]) -> bool:
+        header = text[:200].lower()
+        return any(re.search(p, header) for p in patterns)
+
+    @staticmethod
+    def _is_scanned_page(raw: str) -> bool:
+        """
+        Retorna True se a página parece ser escaneada (imagem sem texto útil).
+        """
+        return len(raw.strip()) < SCANNED_PAGE_CHAR_THRESHOLD
 
     @staticmethod
     def extract_initial_petition(file_bytes: bytes) -> dict:
@@ -47,6 +62,13 @@ class SentenceService:
         Extrai somente a petição inicial de um processo judicial completo.
         Lê as páginas em lotes e interrompe assim que detectar o fim da
         petição, evitando carregar o processo inteiro em memória.
+
+        O fim da petição é detectado por três sinais (em ordem de verificação):
+          1. Marcador textual de encerramento (END_MARKERS)
+          2. Início de nova peça processual (NEXT_PIECE_MARKERS)
+          3. Página escaneada (imagem sem texto) após conteúdo já extraído,
+             padrão comum em processos digitalizados onde cada peça é
+             separada por uma folha de rosto escaneada.
 
         Returns:
             {
@@ -83,7 +105,16 @@ class SentenceService:
                             f"página {start_page}."
                         )
                 else:
-                    if SentenceService._matches_any(
+                    if SentenceService._is_scanned_page(raw):
+                        end_page = page_idx
+                        print(
+                            f"[SentenceService] Página escaneada (sem texto) "
+                            f"detectada na página {page_idx + 1}. Petição "
+                            f"extraída até a página {end_page}."
+                        )
+                        break
+
+                    if SentenceService._is_new_piece_header(
                         clean, NEXT_PIECE_MARKERS
                     ) and not SentenceService._matches_any(clean, END_MARKERS):
                         end_page = page_idx
