@@ -1,6 +1,11 @@
 import re
 import io
+import os
+import httpx
 from pypdf import PdfReader
+from dotenv import load_dotenv
+
+load_dotenv()
 
 START_MARKERS = [
     r"peti[çc][aã]o\s+inicial",
@@ -145,24 +150,6 @@ class SentenceService:
 
     @staticmethod
     def extract_contestacao(file_bytes: bytes, search_from_page: int = 0) -> dict:
-        """
-        Extrai a contestação do processo a partir da página indicada.
-        Busca pelo cabeçalho da contestação e coleta até detectar o fim
-        por marcador de encerramento, nova peça, ou página escaneada.
-
-        Args:
-            file_bytes: bytes do PDF
-            search_from_page: página (0-indexed) a partir da qual buscar,
-                              normalmente o end_page da petição inicial.
-
-        Returns:
-            {
-                "text": str,
-                "start_page": int,
-                "end_page": int,
-                "found": bool,
-            }
-        """
         reader = PdfReader(io.BytesIO(file_bytes))
         total_pages = len(reader.pages)
         limit = min(total_pages, MAX_PAGES_TO_SCAN)
@@ -178,7 +165,9 @@ class SentenceService:
             clean = SentenceService._clean_page_text(raw)
 
             if not contestacao_started:
-                if SentenceService._is_new_piece_header(clean, CONTESTACAO_START_MARKERS):
+                if SentenceService._is_new_piece_header(
+                    clean, CONTESTACAO_START_MARKERS
+                ):
                     contestacao_started = True
                     start_page = page_idx + 1
                     contestacao_lines.append(clean)
@@ -245,9 +234,7 @@ class SentenceService:
                 f"\n{contestacao['text']}\n"
             )
         else:
-            print(
-                "[SentenceService] Contestação não localizada no processo."
-            )
+            print("[SentenceService] Contestação não localizada no processo.")
 
         return {
             "text": result["text"],
@@ -258,3 +245,15 @@ class SentenceService:
                 "pages_read": result["pages_read"],
             },
         }
+
+    @staticmethod
+    async def send_petition_to_summary(text: str):
+        url = f"{os.getenv('SUMMARY_URL')}/api/deconstruct-lawsuit"
+        payload = {"peticao": text}
+
+        async with httpx.AsyncClient(timeout=1000.0) as client:
+            response = await client.post(url, json=payload)
+
+        response.raise_for_status()
+        print(response.json())
+        return response.json()

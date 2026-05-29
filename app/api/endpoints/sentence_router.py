@@ -29,7 +29,7 @@ async def extract_process_data(
     try:
         petition_path = ExtractionService.save_pdf_locally(file_bytes, user_id)
         result = await SentenceService.extract_petition_text(file_bytes)
-        structured_petition = await ExtractionService.send_petition_to_summary(
+        structured_petition = await SentenceService.send_petition_to_summary(
             result["text"]
         )
     except ValueError as e:
