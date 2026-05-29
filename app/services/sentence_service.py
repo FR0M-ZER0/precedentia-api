@@ -257,3 +257,24 @@ class SentenceService:
         response.raise_for_status()
         print(response.json())
         return response.json()
+
+    @staticmethod
+    async def generate_sentence(payload: dict) -> dict:
+        url = f"{os.getenv('SUMMARY_URL')}/api/sentence/generate"
+
+        async with httpx.AsyncClient(timeout=1000.0) as client:
+            response = await client.post(url, json=payload)
+
+        response.raise_for_status()
+        return response.json()
+
+    @staticmethod
+    async def edit_sentence(content: str, change: str) -> dict:
+        url = f"{os.getenv('SUMMARY_URL')}/api/sentence/edit"
+        payload = {"content": content, "change": change}
+
+        async with httpx.AsyncClient(timeout=1000.0) as client:
+            response = await client.post(url, json=payload)
+
+        response.raise_for_status()
+        return response.json()

@@ -1,4 +1,5 @@
 import json
+import httpx
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -6,6 +7,7 @@ from app.core.database import get_db
 from app.services.sentence_service import SentenceService
 from app.services.extraction_service import ExtractionService
 from app.repositories.search_repository import SearchRecord, search_repository
+from app.schemas.sentence_schema import GenerateSentenceRequest, EditSentenceRequest
 
 router = APIRouter()
 
@@ -83,3 +85,29 @@ async def extract_process_data(
             "Connection": "keep-alive",
         },
     )
+
+@router.post("/generate")
+async def gerar_sentenca(body: GenerateSentenceRequest):
+    try:
+        result = await SentenceService.generate_sentence(body.model_dump())
+        return {"content": result.get("content")}
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar sentença: {str(e)}")
+
+
+@router.post("/edit")
+async def editar_sentenca(body: EditSentenceRequest):
+    if not body.content.strip():
+        raise HTTPException(status_code=400, detail="Campo 'content' é obrigatório.")
+    if not body.change.strip():
+        raise HTTPException(status_code=400, detail="Campo 'change' é obrigatório.")
+
+    try:
+        result = await SentenceService.edit_sentence(body.content, body.change)
+        return {"content": result.get("content")}
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao editar sentença: {str(e)}")
