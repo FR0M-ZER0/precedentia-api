@@ -14,6 +14,7 @@ from app.core.database import Base
 from app.models.user_model import User  # noqa: F401
 from app.models.search_model import Search  # noqa: F401
 from app.models.petition_model import Petition  # noqa: F401
+from app.models.sentence_model import Sentence  # noqa: F401
 
 
 load_dotenv()
