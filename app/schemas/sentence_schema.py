@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 
 class GenerateSentenceRequest(BaseModel):
+    user_id: int
     author: str
     defendant: str
     action_type: str
@@ -13,5 +14,5 @@ class GenerateSentenceRequest(BaseModel):
 
 
 class EditSentenceRequest(BaseModel):
-    content: str
+    sentence_id: int
     change: str

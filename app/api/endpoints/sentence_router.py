@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from app.repositories.sentence_repository import sentence_repository
 from app.services.sentence_service import SentenceService
 from app.services.extraction_service import ExtractionService
 from app.repositories.search_repository import SearchRecord, search_repository
@@ -86,11 +87,17 @@ async def extract_process_data(
         },
     )
 
+
 @router.post("/generate")
-async def gerar_sentenca(body: GenerateSentenceRequest):
+async def gerar_sentenca(body: GenerateSentenceRequest, db: Session = Depends(get_db)):
     try:
-        result = await SentenceService.generate_sentence(body.model_dump())
-        return {"content": result.get("content")}
+        payload = body.model_dump(exclude={"user_id"})
+        result = await SentenceService.generate_sentence(payload)
+        content = result.get("content")
+
+        sentence = sentence_repository.save(content=content, user_id=body.user_id, db=db)
+
+        return {"id": sentence.id, "content": content}
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
     except Exception as e:
@@ -98,15 +105,21 @@ async def gerar_sentenca(body: GenerateSentenceRequest):
 
 
 @router.post("/edit")
-async def editar_sentenca(body: EditSentenceRequest):
-    if not body.content.strip():
-        raise HTTPException(status_code=400, detail="Campo 'content' é obrigatório.")
+async def editar_sentenca(body: EditSentenceRequest, db: Session = Depends(get_db)):
     if not body.change.strip():
         raise HTTPException(status_code=400, detail="Campo 'change' é obrigatório.")
 
+    sentence = sentence_repository.get_by_id(body.sentence_id, db)
+    if not sentence:
+        raise HTTPException(status_code=404, detail="Sentença não encontrada.")
+
     try:
-        result = await SentenceService.edit_sentence(body.content, body.change)
-        return {"content": result.get("content")}
+        result = await SentenceService.edit_sentence(sentence.content, body.change)
+        updated_content = result.get("content")
+
+        updated = sentence_repository.update_content(sentence, updated_content, db)
+
+        return {"id": updated.id, "content": updated_content}
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
     except Exception as e:
