@@ -34,7 +34,11 @@ async def generate_initial_petition(
 ):
     try:
         parsed_precedents = json.loads(precedents)
-        parsed_requests = json.loads(requests) if requests.strip().startswith("[") else [r.strip() for r in requests.split(",")]
+        parsed_requests = (
+            json.loads(requests)
+            if requests.strip().startswith("[")
+            else [r.strip() for r in requests.split(",")]
+        )
 
         extracted_texts = []
         for file in files:
@@ -59,7 +63,9 @@ async def generate_initial_petition(
         }
 
         async with httpx.AsyncClient(timeout=1000.0) as client:
-            response = await client.post(f"{SUMMARY_URL}/api/petition/generate", json=payload)
+            response = await client.post(
+                f"{SUMMARY_URL}/api/petition/generate", json=payload
+            )
 
         response.raise_for_status()
         generated_content = response.json().get("content")
@@ -85,7 +91,9 @@ async def generate_initial_petition(
         raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Erro na geração da petição: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro na geração da petição: {str(e)}"
+        )
 
 
 @router.post("/edit", response_model=PetitionResponse)
@@ -100,7 +108,9 @@ async def edit_petition_content(
         .first()
     )
     if not petition:
-        raise HTTPException(status_code=404, detail="Petição não encontrada ou acesso negado.")
+        raise HTTPException(
+            status_code=404, detail="Petição não encontrada ou acesso negado."
+        )
 
     if not payload.change.strip():
         raise HTTPException(status_code=400, detail="Campo 'change' é obrigatório.")
@@ -135,7 +145,9 @@ async def edit_petition_content(
         raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Erro ao editar a petição: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao editar a petição: {str(e)}"
+        )
 
 
 @router.get("/{id}/pdf")
