@@ -1,4 +1,6 @@
 import json
+import httpx
+import os
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -10,6 +12,8 @@ from app.schemas.generation_schema import PetitionResponse, PetitionEditRequest
 from app.services.extraction_service import ExtractionService
 
 router = APIRouter(prefix="/petitions", tags=["Generation"])
+
+SUMMARY_URL = os.getenv("SUMMARY_URL")
 
 
 @router.post("/generate", response_model=PetitionResponse)
@@ -23,15 +27,14 @@ async def generate_initial_petition(
     value_of_cause: str = Form(...),
     urgent_relief: bool = Form(...),
     free_justice: bool = Form(...),
-    precedents: str = Form(
-        ...
-    ),  # JSON string: '[{"name": "...", "question": "...", "description": "..."}]'
+    precedents: str = Form(...),
     files: list[UploadFile] = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     try:
         parsed_precedents = json.loads(precedents)
+        parsed_requests = json.loads(requests) if requests.strip().startswith("[") else [r.strip() for r in requests.split(",")]
 
         extracted_texts = []
         for file in files:
@@ -41,21 +44,31 @@ async def generate_initial_petition(
                 if "text" in extracted:
                     extracted_texts.append(extracted["text"])
 
-        full_facts = facts_summary + "\n" + "\n".join(extracted_texts)
+        payload = {
+            "author_description": author_description,
+            "defendant_description": defendant_description,
+            "action_type": action_type,
+            "tribunal": tribunal,
+            "facts_summary": facts_summary,
+            "files": extracted_texts,
+            "requests": parsed_requests,
+            "cause_value": value_of_cause,
+            "urgent_injunction": urgent_relief,
+            "free_justice": free_justice,
+            "precedents": parsed_precedents,
+        }
 
-        generated_content = (
-            f"PETIÇÃO INICIAL GERADA AUTOMATICAMENTE\n\n"
-            f"Autor: {author_description}\n"
-            f"Réu: {defendant_description}\n"
-            f"Tipo de ação: {action_type}\n"
-            f"Tribunal: {tribunal}\n"
-            f"Fatos: {full_facts}\n"
-            f"Pedidos: {requests}\n"
-            f"Valor da causa: {value_of_cause}\n"
-            f"Tutela urgente: {'Sim' if urgent_relief else 'Não'}\n"
-            f"Justiça gratuita: {'Sim' if free_justice else 'Não'}\n"
-            f"Precedentes: {json.dumps(parsed_precedents, ensure_ascii=False)}"
-        )
+        async with httpx.AsyncClient(timeout=1000.0) as client:
+            response = await client.post(f"{SUMMARY_URL}/api/petition/generate", json=payload)
+
+        response.raise_for_status()
+        generated_content = response.json().get("content")
+        generated_content = generated_content.strip()
+        if generated_content.startswith("```"):
+            generated_content = generated_content.split("\n", 1)[-1]
+        if generated_content.endswith("```"):
+            generated_content = generated_content.rsplit("\n", 1)[0]
+        generated_content = generated_content.strip()
 
         new_petition = Petition(
             content=generated_content,
@@ -67,11 +80,12 @@ async def generate_initial_petition(
 
         return new_petition
 
+    except httpx.HTTPStatusError as e:
+        db.rollback()
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
     except Exception as e:
         db.rollback()
-        raise HTTPException(
-            status_code=500, detail=f"Erro na geração da petição: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Erro na geração da petição: {str(e)}")
 
 
 @router.post("/edit", response_model=PetitionResponse)
@@ -86,24 +100,42 @@ async def edit_petition_content(
         .first()
     )
     if not petition:
-        raise HTTPException(
-            status_code=404, detail="Petição não encontrada ou acesso negado."
-        )
+        raise HTTPException(status_code=404, detail="Petição não encontrada ou acesso negado.")
+
+    if not payload.change.strip():
+        raise HTTPException(status_code=400, detail="Campo 'change' é obrigatório.")
+    if not payload.content.strip():
+        raise HTTPException(status_code=400, detail="Campo 'content' é obrigatório.")
 
     try:
-        edited_content = f"{payload.content}\n\n{payload.change}"
+        async with httpx.AsyncClient(timeout=1000.0) as client:
+            response = await client.post(
+                f"{SUMMARY_URL}/api/petition/edit",
+                json={"content": payload.content, "change": payload.change},
+            )
 
-        petition.content = edited_content
+        response.raise_for_status()
+        updated_content = response.json().get("content")
+
+        updated_content = updated_content.strip()
+        if updated_content.startswith("```"):
+            updated_content = updated_content.split("\n", 1)[-1]
+        if updated_content.endswith("```"):
+            updated_content = updated_content.rsplit("\n", 1)[0]
+        updated_content = updated_content.strip()
+
+        petition.content = updated_content
         db.commit()
         db.refresh(petition)
 
         return petition
 
+    except httpx.HTTPStatusError as e:
+        db.rollback()
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
     except Exception as e:
         db.rollback()
-        raise HTTPException(
-            status_code=500, detail=f"Erro ao editar a petição: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Erro ao editar a petição: {str(e)}")
 
 
 @router.get("/{id}/pdf")
