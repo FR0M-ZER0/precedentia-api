@@ -1,6 +1,11 @@
 from fastapi import APIRouter
 from app.api.endpoints.health_check_routes import router as health_router
-from app.api.endpoints import auth_routes, extraction_routes, analysis_routes, generation_routes
+from app.api.endpoints import (
+    auth_routes,
+    extraction_routes,
+    analysis_routes,
+    generation_routes,
+)
 
 
 api_router = APIRouter()

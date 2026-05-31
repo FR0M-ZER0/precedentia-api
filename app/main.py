@@ -49,7 +49,9 @@ def custom_openapi():
             if not ref:
                 continue
             schema_name = ref.split("/")[-1]
-            component = schema.get("components", {}).get("schemas", {}).get(schema_name, {})
+            component = (
+                schema.get("components", {}).get("schemas", {}).get(schema_name, {})
+            )
             for prop_name, prop in component.get("properties", {}).items():
                 if prop.get("contentMediaType"):
                     prop.pop("contentMediaType", None)

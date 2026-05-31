@@ -23,7 +23,9 @@ async def generate_initial_petition(
     value_of_cause: str = Form(...),
     urgent_relief: bool = Form(...),
     free_justice: bool = Form(...),
-    precedents: str = Form(...),  # JSON string: '[{"name": "...", "question": "...", "description": "..."}]'
+    precedents: str = Form(
+        ...
+    ),  # JSON string: '[{"name": "...", "question": "...", "description": "..."}]'
     files: list[UploadFile] = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -89,10 +91,7 @@ async def edit_petition_content(
         )
 
     try:
-        edited_content = (
-            f"{payload.content}\n\n"
-            f"{payload.change}"
-        )
+        edited_content = f"{payload.content}\n\n{payload.change}"
 
         petition.content = edited_content
         db.commit()
@@ -168,12 +167,7 @@ async def export_petition_to_pdf(
             if not line:
                 story.append(Spacer(1, 0.3 * cm))
                 continue
-            line = (
-                line
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-            )
+            line = line.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             story.append(Paragraph(line, body_style))
 
         doc.build(story)
