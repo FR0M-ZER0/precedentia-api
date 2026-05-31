@@ -121,13 +121,17 @@ async def editar_sentenca(body: EditSentenceRequest, db: Session = Depends(get_d
         result = await SentenceService.edit_sentence(body.content, body.change)
         updated_content = result.get("content")
 
-        updated = sentence_repository.update_content_by_id(body.sentence_id, updated_content, db)
+        updated = sentence_repository.update_content_by_id(
+            body.sentence_id, updated_content, db
+        )
 
         return {"id": updated.id, "content": updated_content}
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao editar sentença: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao editar sentença: {str(e)}"
+        )
 
 
 @router.get("/{sentence_id}/pdf")
