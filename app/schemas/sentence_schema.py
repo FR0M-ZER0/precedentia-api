@@ -15,4 +15,5 @@ class GenerateSentenceRequest(BaseModel):
 
 class EditSentenceRequest(BaseModel):
     sentence_id: int
+    content: str
     change: str

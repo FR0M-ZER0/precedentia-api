@@ -21,5 +21,15 @@ class SentenceRepository:
         db.refresh(sentence)
         return sentence
 
+    def update_content_by_id(self, sentence_id: int, content: str, db: Session) -> Sentence:
+        sentence = db.query(Sentence).filter(Sentence.id == sentence_id).first()
+        if not sentence:
+            raise ValueError(f"Sentença {sentence_id} não encontrada.")
+        sentence.content = content
+        sentence.updated_at = datetime.utcnow()
+        db.commit()
+        db.refresh(sentence)
+        return sentence
+
 
 sentence_repository = SentenceRepository()

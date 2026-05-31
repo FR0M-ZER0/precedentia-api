@@ -114,24 +114,20 @@ async def gerar_sentenca(body: GenerateSentenceRequest, db: Session = Depends(ge
 async def editar_sentenca(body: EditSentenceRequest, db: Session = Depends(get_db)):
     if not body.change.strip():
         raise HTTPException(status_code=400, detail="Campo 'change' é obrigatório.")
-
-    sentence = sentence_repository.get_by_id(body.sentence_id, db)
-    if not sentence:
-        raise HTTPException(status_code=404, detail="Sentença não encontrada.")
+    if not body.content.strip():
+        raise HTTPException(status_code=400, detail="Campo 'content' é obrigatório.")
 
     try:
-        result = await SentenceService.edit_sentence(sentence.content, body.change)
+        result = await SentenceService.edit_sentence(body.content, body.change)
         updated_content = result.get("content")
 
-        updated = sentence_repository.update_content(sentence, updated_content, db)
+        updated = sentence_repository.update_content_by_id(body.sentence_id, updated_content, db)
 
         return {"id": updated.id, "content": updated_content}
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Erro ao editar sentença: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Erro ao editar sentença: {str(e)}")
 
 
 @router.get("/{sentence_id}/pdf")
