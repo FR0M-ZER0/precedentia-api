@@ -127,7 +127,7 @@ async def verify_2fa(data: TwoFactorVerify, db: Session = Depends(get_db)):
     user.two_factor_expires = None
     db.commit()
 
-    access_token = create_access_token(data={"sub": user.email})
+    access_token = create_access_token(data={"sub": user.email, "id": user.id})
 
     return {"access_token": access_token, "token_type": "bearer"}
 

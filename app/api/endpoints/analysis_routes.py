@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
-
+from fastapi.responses import FileResponse, StreamingResponse
+import json
 import os
-from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.api.endpoints.auth_routes import get_current_user
-from app.models.search_model import Search as Petition
-from app.schemas.petition_schema import PetitionRequest, PetitionResponse
+from app.models.search_model import Search
+from app.schemas.petition_schema import PetitionRequest
 from app.services.analysis_service import RealAnalysisService
 from app.services.base_analysis import BaseAnalysisService
 from app.core.database import get_db
 from app.models.user_model import User
-from app.repositories.petition_repository import PetitionRecord, petition_repository
+from app.repositories.search_repository import SearchRecord, search_repository
+from app.schemas.search_schema import SearchResponse
 
 
 router = APIRouter()
@@ -20,41 +21,48 @@ def get_analysis_service() -> BaseAnalysisService:
     return RealAnalysisService()
 
 
-@router.post("/send-petition", response_model=PetitionResponse)
+@router.post("/send-petition")
 async def analyze_petition(
     petition: PetitionRequest,
     service: BaseAnalysisService = Depends(get_analysis_service),
+    db: Session = Depends(get_db),
 ):
-    try:
-        # 1. Busca os precedentes no serviço de embedding
-        response = await service.process_petition(data=petition)
+    async def event_stream():
+        precedents_buffer = []
 
-        # 2. Extrai os IDs dos precedentes retornados
-        precedent_ids = [
-            str(result["id"])
-            for result in response.get("results", [])
-            if result.get("id") is not None
-        ]
+        try:
+            async for event_name, payload in service.stream_petition(data=petition):
+                if event_name == "precedent":
+                    precedents_buffer.append(payload)
 
-        # 3. Persiste os dados da petição + precedentes encontrados
-        record = PetitionRecord(
-            user_id=petition.user_id,
-            precedents=precedent_ids,
-        )
-        record.type = petition.type
-        record.tribunal = petition.tribunal
-        record.facts = petition.facts
-        record.requests = " ".join(petition.requests)
+                yield f"event: {event_name}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
-        petition_repository.save(record)
+                if event_name == "done":
+                    try:
+                        record = SearchRecord(
+                            user_id=petition.user_id,
+                            precedents=precedents_buffer,
+                        )
+                        record.type = petition.type
+                        record.tribunal = petition.tribunal
+                        record.facts = petition.facts
+                        record.requests = " ".join(petition.requests)
+                        search_repository.save(record, db)
+                    except Exception as e:
+                        print(f"Erro ao salvar no DB: {e}")
 
-        return response
+        except Exception as e:
+            yield f"event: error\ndata: {json.dumps({'message': str(e)})}\n\n"
 
-    except Exception as e:
-        print(e)
-        raise HTTPException(
-            status_code=500, detail=f"Erro ao processar a petição: {str(e)}"
-        )
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "X-Accel-Buffering": "no",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        },
+    )
 
 
 @router.get("/download-pdf/{petition_id}")
@@ -64,23 +72,45 @@ async def download_petition_pdf(
     current_user: User = Depends(get_current_user),
 ):
     petition = (
-        db.query(Petition)
-        .filter(Petition.id == petition_id, Petition.user_id == current_user.id)
+        db.query(Search)
+        .filter(Search.id == petition_id, Search.user_id == current_user.id)
         .first()
     )
 
-    if not petition or not petition.file_path:
+    if not petition or not petition.petition_path:
         raise HTTPException(
             status_code=404, detail="Ficheiro não encontrado ou acesso negado."
         )
 
-    if not os.path.exists(petition.file_path):
+    if not os.path.exists(petition.petition_path):
         raise HTTPException(
             status_code=404, detail="O ficheiro físico não foi encontrado no servidor."
         )
 
     return FileResponse(
-        path=petition.file_path,
+        path=petition.petition_path,
         media_type="application/pdf",
         filename=f"peticao_{petition_id}.pdf",
     )
+
+
+@router.get("/searches", response_model=list[SearchResponse])
+async def get_user_searches(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    searches = db.query(Search).filter(Search.user_id == current_user.id).all()
+    return searches
+
+
+@router.get("/searches/{search_id}", response_model=SearchResponse)
+async def get_search(
+    search_id: int,
+    db: Session = Depends(get_db),
+):
+    search = db.query(Search).filter(Search.id == search_id).first()
+
+    if not search:
+        raise HTTPException(status_code=404, detail="Pesquisa não encontrada.")
+
+    return search
