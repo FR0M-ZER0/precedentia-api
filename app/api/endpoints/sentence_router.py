@@ -47,6 +47,8 @@ async def extract_process_data(
     async def event_stream():
         precedents_buffer = []
 
+        yield f"event: process_data\ndata: {json.dumps(structured_petition, ensure_ascii=False)}\n\n"
+
         try:
             async for event_name, payload in ExtractionService.stream_embedding(
                 structured_petition
