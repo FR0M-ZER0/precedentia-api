@@ -48,9 +48,13 @@ async def analyze_petition(
                             precedents=precedents_buffer,
                         )
                         record.type = query_info.get("type") or petition.type
-                        record.tribunal = query_info.get("tribunal") or petition.tribunal
+                        record.tribunal = (
+                            query_info.get("tribunal") or petition.tribunal
+                        )
                         record.facts = query_info.get("facts") or petition.facts
-                        record.requests = query_info.get("requests") or " ".join(petition.requests)
+                        record.requests = query_info.get("requests") or " ".join(
+                            petition.requests
+                        )
                         search_repository.save(record, db)
                     except Exception as e:
                         print(f"Erro ao salvar no DB: {e}")
