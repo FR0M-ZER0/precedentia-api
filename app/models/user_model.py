@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
 
@@ -15,3 +16,13 @@ class User(Base):
     )
     two_factor_code = Column(String, nullable=True)
     two_factor_expires = Column(DateTime, nullable=True)
+
+    searches = relationship(
+        "Search", back_populates="owner", cascade="all, delete-orphan"
+    )
+    petitions = relationship(
+        "Petition", back_populates="user", cascade="all, delete-orphan"
+    )
+    sentences = relationship(
+        "Sentence", back_populates="user", cascade="all, delete-orphan"
+    )
