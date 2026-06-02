@@ -20,9 +20,9 @@ class User(Base):
     searches = relationship(
         "Search", back_populates="owner", cascade="all, delete-orphan"
     )
-    # petitions = relationship(
-    #     "Petition", back_populates="user", cascade="all, delete-orphan"
-    # )
+    petitions = relationship(
+        "Petition", back_populates="user", cascade="all, delete-orphan"
+    )
     sentences = relationship(
         "Sentence", back_populates="user", cascade="all, delete-orphan"
     )

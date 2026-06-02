@@ -29,11 +29,15 @@ async def analyze_petition(
 ):
     async def event_stream():
         precedents_buffer = []
+        query_info = {}
 
         try:
             async for event_name, payload in service.stream_petition(data=petition):
                 if event_name == "precedent":
                     precedents_buffer.append(payload)
+
+                if event_name == "done":
+                    query_info = payload.get("query", {})
 
                 yield f"event: {event_name}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
@@ -43,10 +47,14 @@ async def analyze_petition(
                             user_id=petition.user_id,
                             precedents=precedents_buffer,
                         )
-                        record.type = petition.type
-                        record.tribunal = petition.tribunal
-                        record.facts = petition.facts
-                        record.requests = " ".join(petition.requests)
+                        record.type = query_info.get("type") or petition.type
+                        record.tribunal = (
+                            query_info.get("tribunal") or petition.tribunal
+                        )
+                        record.facts = query_info.get("facts") or petition.facts
+                        record.requests = query_info.get("requests") or " ".join(
+                            petition.requests
+                        )
                         search_repository.save(record, db)
                     except Exception as e:
                         print(f"Erro ao salvar no DB: {e}")

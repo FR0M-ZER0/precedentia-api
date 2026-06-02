@@ -33,6 +33,7 @@ async def extract_pdf_data(
 
     async def event_stream():
         precedents_buffer = []
+        query_info = {}
 
         try:
             async for event_name, payload in ExtractionService.stream_embedding(
@@ -40,6 +41,9 @@ async def extract_pdf_data(
             ):
                 if event_name == "precedent":
                     precedents_buffer.append(payload)
+
+                if event_name == "done":
+                    query_info = payload.get("query", {})
 
                 yield f"event: {event_name}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
@@ -53,12 +57,10 @@ async def extract_pdf_data(
                             precedents=snapshot,
                             petition_path=petition_path,
                         )
-                        record.type = structured_petition.get("tipo")
-                        record.tribunal = structured_petition.get("tribunal")
-                        record.facts = structured_petition.get("fatos")
-                        record.requests = " ".join(
-                            structured_petition.get("pedidos", [])
-                        )
+                        record.type = query_info.get("type")
+                        record.tribunal = query_info.get("tribunal")
+                        record.facts = query_info.get("facts")
+                        record.requests = query_info.get("requests", "")
                         search_repository.save(record, db)
                     except Exception as e:
                         print(f"Erro ao salvar no DB: {e}")
