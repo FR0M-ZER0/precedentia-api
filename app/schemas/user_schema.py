@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
+from pydantic import ConfigDict
 
 
 class UserCreate(BaseModel):
@@ -16,9 +17,7 @@ class UserResponse(BaseModel):
     id: int
     email: EmailStr
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Token(BaseModel):
@@ -39,3 +38,12 @@ class PasswordResetConfirm(BaseModel):
     email: EmailStr
     code: str
     new_password: str = Field(..., min_length=8)
+
+
+class EmailUpdateRequest(BaseModel):
+    new_email: EmailStr
+
+
+class EmailUpdateConfirm(BaseModel):
+    new_email: EmailStr
+    code: str

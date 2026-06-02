@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+from app.schemas.user_schema import EmailUpdateRequest, EmailUpdateConfirm
 
 from app.core.database import get_db
 from app.models.user_model import User
@@ -126,7 +127,7 @@ async def verify_2fa(data: TwoFactorVerify, db: Session = Depends(get_db)):
     user.two_factor_expires = None
     db.commit()
 
-    access_token = create_access_token(data={"sub": user.email})
+    access_token = create_access_token(data={"sub": user.email, "id": user.id})
 
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -183,3 +184,47 @@ async def confirm_password_reset(
     db.commit()
 
     return {"message": "Senha alterada com sucesso! Agora você pode fazer login."}
+
+
+@router.post("/update-email/request")
+async def request_email_update(
+    data: EmailUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    email_exists = db.query(User).filter(User.email == data.new_email).first()
+    if email_exists:
+        raise HTTPException(status_code=400, detail="Este e-mail já está em uso.")
+
+    code = await send_2fa_email(current_user.email)
+
+    current_user.two_factor_code = code
+    current_user.two_factor_expires = datetime.utcnow() + timedelta(minutes=15)
+    db.commit()
+
+    return {"message": f"Código de confirmação enviado para {current_user.email}"}
+
+
+@router.post("/update-email/confirm")
+async def confirm_email_update(
+    data: EmailUpdateConfirm,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not current_user.two_factor_code or current_user.two_factor_code != data.code:
+        raise HTTPException(status_code=400, detail="Código inválido.")
+
+    if datetime.utcnow() > current_user.two_factor_expires:
+        raise HTTPException(status_code=400, detail="Código expirado.")
+
+    current_user.email = data.new_email
+    current_user.two_factor_code = None
+    current_user.two_factor_expires = None
+
+    db.commit()
+    db.refresh(current_user)
+
+    return {
+        "message": "E-mail atualizado com sucesso! Por favor, realize o login novamente.",
+        "new_email": current_user.email,
+    }

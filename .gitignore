@@ -4,3 +4,7 @@ node_modules/
 .ruff_cache/
 pytest_cache/
 .env
+.venv
+app/documents/
+docker-compose.yml
+petitions/
