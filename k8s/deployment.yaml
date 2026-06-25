@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: precedentia-api
+  labels:
+    app: api
 spec:
   replicas: 1
   selector:
@@ -15,16 +17,21 @@ spec:
       containers:
       - name: api
         image: docker.io/gabguimaraes/precedentia-api:latest
-        
-
+        ports:
+        - containerPort: 5000
         env:
+          # Alterado para SQLite para evitar erros de conexão enquanto o Postgres não é configurado
           - name: DATABASE_URL
-            value: "postgresql+psycopg2://admin:admin@postgres-service:5432/precedentia-users"
+            value: "sqlite:///./precedentia.db"
+          # Variáveis de comunicação entre microserviços
           - name: EMBEDDING_URL
             value: "http://embedding-service:5001"
           - name: SUMMARY_URL
             value: "http://summary-service:5002"
-
-        ports:
-        - containerPort: 5000
-        # ... resto das configurações ...
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
