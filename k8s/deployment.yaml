@@ -15,13 +15,16 @@ spec:
       containers:
       - name: api
         image: docker.io/gabguimaraes/precedentia-api:latest
+        
+
+        env:
+          - name: DATABASE_URL
+            value: "postgresql+psycopg2://admin:admin@postgres-service:5432/precedentia-users"
+          - name: EMBEDDING_URL
+            value: "http://embedding-service:5001"
+          - name: SUMMARY_URL
+            value: "http://summary-service:5002"
+
         ports:
         - containerPort: 5000
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "2Gi"
-            cpu: "1000m"
-
+        # ... resto das configurações ...
